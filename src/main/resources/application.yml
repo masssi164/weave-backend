@@ -1,0 +1,25 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: weave-backend
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${WEAVE_OIDC_ISSUER_URI}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+weave:
+  security:
+    required-audience: ${WEAVE_OIDC_REQUIRED_AUDIENCE:}
