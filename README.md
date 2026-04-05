@@ -14,6 +14,8 @@ The backend should act as a product API and orchestration layer, not as a blind 
 This repository now starts as a JWT-protected Spring Boot API with:
 
 - a `/api/v1/me` endpoint for claim inspection and client/backend contract testing
+- a `/api/v1/workspace/capabilities` endpoint for the first backend-owned client contract
+- OpenAPI JSON published at `/v3/api-docs`
 - actuator health and info endpoints
 - optional audience validation for JWTs
 - Gradle wrapper and GitHub Actions CI

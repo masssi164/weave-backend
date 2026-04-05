@@ -1,5 +1,12 @@
 package com.massimotter.weave.backend.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.massimotter.weave.backend.model.AuthenticatedUserResponse;
 import java.util.Collection;
 import java.util.List;
@@ -12,9 +19,21 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1")
+@Tag(name = "Identity", description = "Authenticated caller introspection endpoints.")
 public class IdentityController {
 
     @GetMapping("/me")
+    @Operation(
+            summary = "Get the authenticated caller profile",
+            description = "Returns the normalized identity claims available to the Weave backend.",
+            security = @SecurityRequirement(name = "bearer-jwt"))
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Authenticated caller details.",
+                    content = @Content(schema = @Schema(implementation = AuthenticatedUserResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid bearer token.")
+    })
     public AuthenticatedUserResponse me(@AuthenticationPrincipal Jwt jwt) {
         return new AuthenticatedUserResponse(
                 jwt.getSubject(),
