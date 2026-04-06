@@ -43,12 +43,16 @@ class AzpValidationFilter extends OncePerRequestFilter {
         }
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth instanceof JwtAuthenticationToken jwtAuth) {
-            String azp = jwtAuth.getToken().getClaimAsString("azp");
-            if (azp == null || !allowedAzp.contains(azp)) {
-                rejectRequest(response);
-                return;
-            }
+        // Only enforce azp when an authenticated JWT principal is present.
+        // Unauthenticated requests and permitAll() paths are handled by the authorization rules downstream.
+        if (auth == null || !auth.isAuthenticated() || !(auth instanceof JwtAuthenticationToken jwtAuth)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        String azp = jwtAuth.getToken().getClaimAsString("azp");
+        if (azp == null || !allowedAzp.contains(azp)) {
+            rejectRequest(response);
+            return;
         }
 
         filterChain.doFilter(request, response);

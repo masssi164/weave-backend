@@ -40,6 +40,8 @@ Optional runtime variables:
 - `WEAVE_OIDC_REQUIRED_AUDIENCE`: audience to require in access tokens once `weave-inf` exposes the final audience/token-exchange contract
 - `PORT`: HTTP port, defaults to `8080`
 
+The `weave-backend` audience is expected to be attached to app tokens via a **Hardcoded Audience mapper** on the `weave-app` client (or a dedicated client scope) in Keycloak, targeting audience value `weave-backend`. This is configured in the `weave-infra` Keycloak setup. See weave-infra issue #4 for the deployment status.
+
 ## OIDC runtime configuration
 
 All OIDC behaviour is driven by environment variables. Issuer validation is always enforced and non-configurable.

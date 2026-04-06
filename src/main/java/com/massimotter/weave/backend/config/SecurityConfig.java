@@ -35,14 +35,18 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Only register the azp filter when enforcement is active — no filter in the chain
+        // makes the "disabled" state unambiguous rather than relying on an early return inside the filter.
+        List<String> effectiveAzp = weaveSecurityProperties.effectiveAllowedAzp();
+        if (!effectiveAzp.isEmpty()) {
+            // AZP filter runs after BearerTokenAuthenticationFilter so JwtAuthenticationToken
+            // is already in the SecurityContext when azp is checked.
+            http.addFilterAfter(new AzpValidationFilter(effectiveAzp), BearerTokenAuthenticationFilter.class);
+        }
+
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // AZP filter runs after BearerTokenAuthenticationFilter so JwtAuthenticationToken
-                // is already in the SecurityContext when azp is checked.
-                .addFilterAfter(
-                        new AzpValidationFilter(weaveSecurityProperties.effectiveAllowedAzp()),
-                        BearerTokenAuthenticationFilter.class)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/actuator/health", "/actuator/info", "/error").permitAll()
                         .requestMatchers("/v3/api-docs", "/v3/api-docs/**").permitAll()
