@@ -8,7 +8,7 @@
 - OIDC post-logout redirect: `com.massimotter.weave:/logout`
 - derived Nextcloud URL: `https://nextcloud.<base-domain>`
 
-The current `weave-inf` setup still registers `weaveapp://login/callback` for the Keycloak client and exposes Nextcloud on `files.<tenant_domain>`, so the default infrastructure contract does not match the client code.
+The current `weave-inf` setup now registers `com.massimotter.weave:/oauthredirect` and `com.massimotter.weave:/logout` for the `weave-app` Keycloak client and exposes Nextcloud on `nextcloud.<tenant_domain>`, so the infrastructure contract now matches the client code.
 
 ## Proposal
 

@@ -63,4 +63,4 @@ docker run --rm \
 
 ## Architecture alignment
 
-See [docs/architecture-alignment.md](/Users/flotterotter/code/weave-backend/docs/architecture-alignment.md) and the issue drafts under [docs/issues](/Users/flotterotter/code/weave-backend/docs/issues).
+See [docs/architecture-alignment.md](docs/architecture-alignment.md) and the issue drafts under [docs/issues](docs/issues).
