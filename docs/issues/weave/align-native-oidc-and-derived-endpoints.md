@@ -1,6 +1,6 @@
 # Align native OIDC registration and derived endpoints
 
-> **Status: Resolved** — `weave-inf` now uses the correct native redirect URIs and exposes Nextcloud on `nextcloud.<base-domain>`. The Proposal and Acceptance Criteria below describe the remaining documentation work.
+> **Status: Resolved in Terraform source** — `weave-inf` now declares the correct native redirect URIs and `nextcloud.<base-domain>`. A `terraform apply` in `weave-workspace/02-keycloak-setup` is required to propagate the changes to a running Keycloak instance.
 
 ## Problem
 

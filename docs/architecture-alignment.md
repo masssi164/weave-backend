@@ -31,8 +31,8 @@ Own the runnable environment and integration contract:
 
 ## Gaps found in the current state
 
-1. ~~`weave-inf` registered `weaveapp://login/callback`~~ — resolved: `weave-inf` now registers `com.massimotter.weave:/oauthredirect` and `com.massimotter.weave:/logout` for the `weave-app` Keycloak client, matching the app contract.
-2. ~~Nextcloud hostname mismatch~~ — resolved: `weave-inf` now uses `nextcloud.<tenant_domain>`, matching the app derivation rule.
+1. ~~`weave-inf` registered `weaveapp://login/callback`~~ — resolved in Terraform source: `weave-inf` now declares `com.massimotter.weave:/oauthredirect` and `com.massimotter.weave:/logout` for the `weave-app` Keycloak client. Requires `terraform apply` in `weave-workspace/02-keycloak-setup` to propagate to a running Keycloak instance.
+2. ~~Nextcloud hostname mismatch~~ — resolved in Terraform source: `weave-inf` now declares `nextcloud.<tenant_domain>`, matching the app derivation rule. Requires `terraform apply` to propagate.
 3. `weave-inf` still defaults to an HTTP-only local ingress. Note: per the app AGENTS.md, local development stacks may legitimately use `http://` issuers and service URLs; HTTPS is recommended for production deployments.
 4. The original `weave-backend` spike assumed that user bearer tokens could be forwarded directly into Nextcloud and Matrix calls. That is the wrong default boundary for this stack.
 5. The original backend spike did not compile in a clean Gradle/JDK environment because it used `WebClient` types without the needed reactive dependency and mixed incompatible OAuth client wiring.
