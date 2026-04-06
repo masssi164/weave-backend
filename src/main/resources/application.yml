@@ -22,4 +22,12 @@ management:
 
 weave:
   security:
+    # Required audience for JWT validation.
+    # Set WEAVE_OIDC_REQUIRED_AUDIENCE to enforce aud claim checking.
+    # Expected value once infra ships the audience mapper: weave-backend
     required-audience: ${WEAVE_OIDC_REQUIRED_AUDIENCE:}
+    # Comma-separated list of allowed azp (authorized party) client IDs.
+    # When set and non-empty, tokens whose azp claim is absent or not in this list are rejected with 401.
+    # Expected value for the first-party Weave Flutter client: weave-app
+    # Leave unset or empty to disable enforcement (backwards-compatible default).
+    allowed-azp: ${WEAVE_OIDC_ALLOWED_AZP:}

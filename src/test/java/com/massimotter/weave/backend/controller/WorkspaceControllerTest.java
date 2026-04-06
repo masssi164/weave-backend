@@ -29,7 +29,8 @@ class WorkspaceControllerTest {
 
     @Test
     void returnsStaticWorkspaceCapabilities() throws Exception {
-        mockMvc.perform(get("/api/v1/workspace/capabilities").with(jwt()))
+        mockMvc.perform(get("/api/v1/workspace/capabilities").with(
+                        jwt().jwt(jwt -> jwt.claim("scope", "openid profile"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.shellAccess.enabled").value(true))
                 .andExpect(jsonPath("$.shellAccess.readiness").value("ready"))

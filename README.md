@@ -40,6 +40,16 @@ Optional runtime variables:
 - `WEAVE_OIDC_REQUIRED_AUDIENCE`: audience to require in access tokens once `weave-inf` exposes the final audience/token-exchange contract
 - `PORT`: HTTP port, defaults to `8080`
 
+## OIDC runtime configuration
+
+All OIDC behaviour is driven by environment variables. Issuer validation is always enforced and non-configurable.
+
+| Variable | Required | Description |
+|---|---|---|
+| `WEAVE_OIDC_ISSUER_URI` | **Yes** | Keycloak realm issuer URI. Issuer validation is always on. |
+| `WEAVE_OIDC_REQUIRED_AUDIENCE` | No | When set, tokens must include this value in the `aud` claim. Expected value once the audience mapper is deployed: `weave-backend`. |
+| `WEAVE_OIDC_ALLOWED_AZP` | No | Comma-separated list of allowed `azp` (authorized party) client IDs. When set and non-empty, tokens with an absent or unlisted `azp` are rejected with **401**. Expected value for the first-party Weave Flutter client: `weave-app`. Leave unset or empty to disable enforcement (backwards-compatible default). |
+
 ## Local validation
 
 If Java 17 is installed locally:
