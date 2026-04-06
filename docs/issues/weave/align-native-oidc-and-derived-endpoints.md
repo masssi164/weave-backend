@@ -1,14 +1,20 @@
 # Align native OIDC registration and derived endpoints
 
+> **Status: Resolved** — `weave-inf` now uses the correct native redirect URIs and exposes Nextcloud on `nextcloud.<base-domain>`. The Proposal and Acceptance Criteria below describe the remaining documentation work.
+
 ## Problem
 
-`weave` currently expects:
+`weave` expected:
 
 - OIDC redirect: `com.massimotter.weave:/oauthredirect`
 - OIDC post-logout redirect: `com.massimotter.weave:/logout`
 - derived Nextcloud URL: `https://nextcloud.<base-domain>`
 
-The current `weave-inf` setup now registers `com.massimotter.weave:/oauthredirect` and `com.massimotter.weave:/logout` for the `weave-app` Keycloak client and exposes Nextcloud on `nextcloud.<tenant_domain>`, so the infrastructure contract now matches the client code.
+The original `weave-inf` setup had registered `weaveapp://login/callback` for the Keycloak client and exposed Nextcloud on `files.<tenant_domain>`, so the default infrastructure contract did not match the client code.
+
+## Resolution
+
+`weave-inf` was updated to register `com.massimotter.weave:/oauthredirect` and `com.massimotter.weave:/logout` for the `weave-app` Keycloak client and to expose Nextcloud on `nextcloud.<base-domain>`, bringing the infrastructure contract into alignment with the client expectations.
 
 ## Proposal
 
