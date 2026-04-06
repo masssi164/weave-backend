@@ -14,9 +14,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 /**
  * Enforces caller binding by validating the {@code azp} (authorized party) claim in JWT tokens.
  *
- * <p>When the allowlist is non-empty, any token whose {@code azp} claim is absent or not in the
- * allowlist is rejected with HTTP 401. When the allowlist is empty, enforcement is disabled for
- * backwards-compatible operation (no allowlist configured → any caller accepted).
+ * <p>Any token whose {@code azp} claim is absent or not in the allowlist is rejected with HTTP 401.
+ * This filter is only registered in the filter chain when the allowlist is non-empty; it must not
+ * be constructed with an empty list.
  *
  * <p>This filter runs after {@code BearerTokenAuthenticationFilter} so that the token is already
  * decoded and the {@code JwtAuthenticationToken} is available in the {@code SecurityContext}.
@@ -36,12 +36,6 @@ class AzpValidationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
-        // Enforcement is disabled when the allowlist is empty — pass through unchanged.
-        if (allowedAzp.isEmpty()) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         // Only enforce azp when an authenticated JWT principal is present.
         // Unauthenticated requests and permitAll() paths are handled by the authorization rules downstream.

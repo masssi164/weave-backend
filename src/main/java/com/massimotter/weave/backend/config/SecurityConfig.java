@@ -50,12 +50,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/actuator/health", "/actuator/info", "/error").permitAll()
                         .requestMatchers("/v3/api-docs", "/v3/api-docs/**").permitAll()
-                        // Require SCOPE_openid on product endpoints. The Weave app requests
-                        // openid in its standard OIDC scope list, so any token from the full
-                        // OIDC authorization flow carries this scope. Narrower service tokens
-                        // without openid are thus explicitly excluded from product APIs.
-                        .requestMatchers("/api/v1/me", "/api/v1/workspace/capabilities")
-                                .hasAuthority("SCOPE_openid")
+                        // SCOPE_openid is the minimum gate for all product APIs: any token
+                        // from a full OIDC authorization flow carries this scope; service or M2M
+                        // tokens using client_credentials without openid are explicitly excluded.
+                        // When azp enforcement is also active the two-layer check forms a
+                        // first-party caller binding.
+                        .requestMatchers("/api/v1/**").hasAuthority("SCOPE_openid")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt ->
                         jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
