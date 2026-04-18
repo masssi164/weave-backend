@@ -26,14 +26,19 @@ public class JwtDecoderConfig {
         if (weaveSecurityProperties.hasRequiredAudience()) {
             validator = new DelegatingOAuth2TokenValidator<>(
                     validator,
-                    jwt -> hasRequiredAudience(jwt, weaveSecurityProperties.requiredAudience().trim()));
+                    requiredAudienceValidator(weaveSecurityProperties.requiredAudience()));
         }
 
         jwtDecoder.setJwtValidator(validator);
         return jwtDecoder;
     }
 
-    private OAuth2TokenValidatorResult hasRequiredAudience(Jwt jwt, String requiredAudience) {
+    static OAuth2TokenValidator<Jwt> requiredAudienceValidator(String requiredAudience) {
+        String normalizedRequiredAudience = requiredAudience.trim();
+        return jwt -> hasRequiredAudience(jwt, normalizedRequiredAudience);
+    }
+
+    private static OAuth2TokenValidatorResult hasRequiredAudience(Jwt jwt, String requiredAudience) {
         List<String> audiences = jwt.getAudience();
         if (audiences != null && audiences.contains(requiredAudience)) {
             return OAuth2TokenValidatorResult.success();
@@ -44,7 +49,7 @@ public class JwtDecoderConfig {
                         "The token is missing the required audience '" + requiredAudience + "'."));
     }
 
-    private org.springframework.security.oauth2.core.OAuth2Error error(String code, String description) {
+    private static org.springframework.security.oauth2.core.OAuth2Error error(String code, String description) {
         return new org.springframework.security.oauth2.core.OAuth2Error(code, description, null);
     }
 }

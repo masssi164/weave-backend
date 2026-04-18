@@ -32,7 +32,8 @@ public class IdentityController {
                     responseCode = "200",
                     description = "Authenticated caller details.",
                     content = @Content(schema = @Schema(implementation = AuthenticatedUserResponse.class))),
-            @ApiResponse(responseCode = "401", description = "Missing or invalid bearer token.")
+            @ApiResponse(responseCode = "401", description = "Missing or invalid bearer token."),
+            @ApiResponse(responseCode = "403", description = "Bearer token is missing the weave:workspace scope.")
     })
     public AuthenticatedUserResponse me(@AuthenticationPrincipal Jwt jwt) {
         return new AuthenticatedUserResponse(

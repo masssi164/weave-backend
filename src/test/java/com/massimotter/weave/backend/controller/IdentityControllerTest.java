@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -39,7 +40,8 @@ class IdentityControllerTest {
                         .claim("azp", "weave-app")
                         .claim("aud", List.of("weave-app", "account"))
                         .claim("realm_access", Map.of("roles", List.of("member", "admin")))
-                        .claim("groups", List.of("team-alpha", "team-beta")))))
+                        .claim("groups", List.of("team-alpha", "team-beta")))
+                        .authorities(new SimpleGrantedAuthority("SCOPE_weave:workspace"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.sub").value("user-123"))
                 .andExpect(jsonPath("$.preferredUsername").value("alice"))

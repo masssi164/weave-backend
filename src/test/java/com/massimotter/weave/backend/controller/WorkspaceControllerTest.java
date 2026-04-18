@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -29,7 +30,8 @@ class WorkspaceControllerTest {
 
     @Test
     void returnsStaticWorkspaceCapabilities() throws Exception {
-        mockMvc.perform(get("/api/v1/workspace/capabilities").with(jwt()))
+        mockMvc.perform(get("/api/v1/workspace/capabilities").with(jwt()
+                        .authorities(new SimpleGrantedAuthority("SCOPE_weave:workspace"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.shellAccess.enabled").value(true))
                 .andExpect(jsonPath("$.shellAccess.readiness").value("ready"))
