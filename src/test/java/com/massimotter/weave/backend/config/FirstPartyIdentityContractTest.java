@@ -12,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -27,13 +28,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(properties = {
         "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://auth.example.invalid/realms/weave",
-        "weave.security.required-audience=weave-backend"
+        "weave.security.required-audience=weave-app",
+        "weave.security.client-id=weave-app"
 })
 @AutoConfigureMockMvc
 class FirstPartyIdentityContractTest {
 
-    private static final String REQUIRED_AUDIENCE = "weave-backend";
-    private static final String FIRST_PARTY_CLIENT_ID = "com.massimotter.weave";
+    private static final String REQUIRED_AUDIENCE = "weave-app";
+    private static final String FIRST_PARTY_CLIENT_ID = "weave-app";
 
     @Autowired
     private MockMvc mockMvc;
@@ -47,9 +49,9 @@ class FirstPartyIdentityContractTest {
     }
 
     @Test
-    void acceptsTokenWithRequiredAudience() throws Exception {
+    void acceptsTokenWithFirstPartyContractAndWorkspaceScope() throws Exception {
         mockMvc.perform(get("/api/v1/workspace/capabilities")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer correct-audience"))
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer valid-contract"))
                 .andExpect(status().isOk());
     }
 
@@ -68,6 +70,26 @@ class FirstPartyIdentityContractTest {
                 .andExpect(status().isForbidden());
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "missing-authorized-party",
+            "wrong-azp",
+            "wrong-client-id",
+            "conflicting-authorized-party"
+    })
+    void rejectsTokensWithoutRequiredAuthorizedParty(String tokenValue) throws Exception {
+        mockMvc.perform(get("/api/v1/workspace/capabilities")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenValue))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void acceptsClientIdClaimWhenAzpIsAbsent() throws Exception {
+        mockMvc.perform(get("/api/v1/workspace/capabilities")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer client-id-only"))
+                .andExpect(status().isOk());
+    }
+
     @Test
     void acceptsValidFullFirstPartyToken() throws Exception {
         mockMvc.perform(get("/api/v1/me")
@@ -82,10 +104,23 @@ class FirstPartyIdentityContractTest {
 
     private Jwt decode(String tokenValue) {
         Jwt jwt = switch (tokenValue) {
-            case "correct-audience" -> jwt(tokenValue, List.of(REQUIRED_AUDIENCE), "weave:workspace", null);
-            case "wrong-audience" -> jwt(tokenValue, List.of("other-api"), "weave:workspace", null);
-            case "missing-audience" -> jwt(tokenValue, null, "weave:workspace", null);
-            case "missing-scope" -> jwt(tokenValue, List.of(REQUIRED_AUDIENCE), "openid profile", null);
+            case "valid-contract" -> jwt(tokenValue, List.of(REQUIRED_AUDIENCE), "weave:workspace",
+                    Map.of("azp", FIRST_PARTY_CLIENT_ID));
+            case "client-id-only" -> jwt(tokenValue, List.of(REQUIRED_AUDIENCE), "weave:workspace",
+                    Map.of("client_id", FIRST_PARTY_CLIENT_ID));
+            case "wrong-audience" -> jwt(tokenValue, List.of("other-api"), "weave:workspace",
+                    Map.of("azp", FIRST_PARTY_CLIENT_ID));
+            case "missing-audience" -> jwt(tokenValue, null, "weave:workspace",
+                    Map.of("azp", FIRST_PARTY_CLIENT_ID));
+            case "missing-scope" -> jwt(tokenValue, List.of(REQUIRED_AUDIENCE), "openid profile",
+                    Map.of("azp", FIRST_PARTY_CLIENT_ID));
+            case "missing-authorized-party" -> jwt(tokenValue, List.of(REQUIRED_AUDIENCE), "weave:workspace", null);
+            case "wrong-azp" -> jwt(tokenValue, List.of(REQUIRED_AUDIENCE), "weave:workspace",
+                    Map.of("azp", "other-client"));
+            case "wrong-client-id" -> jwt(tokenValue, List.of(REQUIRED_AUDIENCE), "weave:workspace",
+                    Map.of("client_id", "other-client"));
+            case "conflicting-authorized-party" -> jwt(tokenValue, List.of(REQUIRED_AUDIENCE), "weave:workspace",
+                    Map.of("azp", FIRST_PARTY_CLIENT_ID, "client_id", "other-client"));
             case "valid-full-token" -> jwt(tokenValue, List.of(REQUIRED_AUDIENCE), "openid profile weave:workspace",
                     Map.of(
                             "preferred_username", "alice",
@@ -97,10 +132,13 @@ class FirstPartyIdentityContractTest {
             default -> throw new JwtException("Unknown test token.");
         };
 
-        OAuth2TokenValidatorResult audienceValidation =
-                JwtDecoderConfig.requiredAudienceValidator(REQUIRED_AUDIENCE).validate(jwt);
-        if (audienceValidation.hasErrors()) {
-            throw new JwtValidationException("JWT missing required audience.", audienceValidation.getErrors());
+        OAuth2TokenValidator<Jwt> validator = new org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator<>(
+                JwtDecoderConfig.requiredAudienceValidator(REQUIRED_AUDIENCE),
+                JwtDecoderConfig.requiredAuthorizedPartyValidator(FIRST_PARTY_CLIENT_ID));
+        OAuth2TokenValidatorResult validation = validator.validate(jwt);
+        if (validation.hasErrors()) {
+            throw new JwtValidationException("JWT does not satisfy the first-party contract.",
+                    validation.getErrors());
         }
 
         return jwt;

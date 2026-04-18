@@ -45,10 +45,9 @@ public class SecurityConfig {
     @Bean
     Converter<Jwt, ? extends AbstractAuthenticationToken> jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        // First-party caller binding is carried by Keycloak as azp/client_id
-        // for the Flutter client com.massimotter.weave. Do not treat that
-        // claim as an authority; issuer/audience validation establishes the
-        // token contract and scopes grant API access.
+        // First-party caller binding is carried by Keycloak as azp/client_id.
+        // Do not treat that claim as an authority; issuer/audience/client
+        // validation establishes the token contract and scopes grant API access.
         converter.setJwtGrantedAuthoritiesConverter(this::extractAuthorities);
         return converter;
     }

@@ -3,6 +3,7 @@ package com.massimotter.weave.backend.controller;
 import com.massimotter.weave.backend.config.SecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -15,7 +16,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = WorkspaceController.class)
+@WebMvcTest(
+        controllers = WorkspaceController.class,
+        excludeAutoConfiguration = OAuth2ResourceServerAutoConfiguration.class)
 @Import(SecurityConfig.class)
 @org.springframework.test.context.TestPropertySource(properties = {
         "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://auth.example.invalid/realms/weave"
