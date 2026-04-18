@@ -24,6 +24,8 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    private static final String WORKSPACE_SCOPE_AUTHORITY = "SCOPE_weave:workspace";
+
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -32,6 +34,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/actuator/health", "/actuator/info", "/error").permitAll()
                         .requestMatchers("/v3/api-docs", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/v1/**").hasAuthority(WORKSPACE_SCOPE_AUTHORITY)
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt ->
                         jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
@@ -42,6 +45,10 @@ public class SecurityConfig {
     @Bean
     Converter<Jwt, ? extends AbstractAuthenticationToken> jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        // First-party caller binding is carried by Keycloak as azp/client_id
+        // for the Flutter client com.massimotter.weave. Do not treat that
+        // claim as an authority; issuer/audience validation establishes the
+        // token contract and scopes grant API access.
         converter.setJwtGrantedAuthoritiesConverter(this::extractAuthorities);
         return converter;
     }

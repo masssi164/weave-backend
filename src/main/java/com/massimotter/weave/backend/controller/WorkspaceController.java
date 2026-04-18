@@ -29,7 +29,8 @@ public class WorkspaceController {
                     responseCode = "200",
                     description = "Workspace capability snapshot.",
                     content = @Content(schema = @Schema(implementation = WorkspaceCapabilitiesResponse.class))),
-            @ApiResponse(responseCode = "401", description = "Missing or invalid bearer token.")
+            @ApiResponse(responseCode = "401", description = "Missing or invalid bearer token."),
+            @ApiResponse(responseCode = "403", description = "Bearer token is missing the weave:workspace scope.")
     })
     public WorkspaceCapabilitiesResponse capabilities() {
         return new WorkspaceCapabilitiesResponse(
