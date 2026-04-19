@@ -70,6 +70,14 @@ docker run --rm \
   ./gradlew test
 ```
 
+To build the local backend image used by `weave-infra` integration runs:
+
+```bash
+docker build -t weave-backend:e2e .
+```
+
+This Dockerfile-based path is the reproducible local image build for Apple Silicon and other non-x86 hosts.
+
 ## Architecture alignment
 
 See [docs/architecture-alignment.md](/Users/flotterotter/code/weave-backend/docs/architecture-alignment.md) and the issue drafts under [docs/issues](/Users/flotterotter/code/weave-backend/docs/issues).
