@@ -4,9 +4,14 @@ import com.massimotter.weave.backend.config.ApiAccessDeniedHandler;
 import com.massimotter.weave.backend.config.ApiAuthenticationEntryPoint;
 import com.massimotter.weave.backend.config.ApiErrorResponseWriter;
 import com.massimotter.weave.backend.config.SecurityConfig;
+import com.massimotter.weave.backend.config.WeaveSecurityProperties;
+import com.massimotter.weave.backend.config.WorkspaceCapabilityProperties;
+import com.massimotter.weave.backend.service.WorkspaceCapabilityService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -22,9 +27,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(
         controllers = WorkspaceController.class,
         excludeAutoConfiguration = OAuth2ResourceServerAutoConfiguration.class)
-@Import({SecurityConfig.class, ApiAuthenticationEntryPoint.class, ApiAccessDeniedHandler.class, ApiErrorResponseWriter.class})
+@Import({
+        SecurityConfig.class,
+        WorkspaceCapabilityService.class,
+        ApiAuthenticationEntryPoint.class,
+        ApiAccessDeniedHandler.class,
+        ApiErrorResponseWriter.class
+})
+@EnableConfigurationProperties({
+        WeaveSecurityProperties.class,
+        WorkspaceCapabilityProperties.class,
+        OAuth2ResourceServerProperties.class
+})
 @org.springframework.test.context.TestPropertySource(properties = {
-        "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://auth.example.invalid/realms/weave"
+        "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://auth.example.invalid/realms/weave",
+        "weave.workspace.chat.dependency-url=https://matrix.weave.local",
+        "weave.workspace.files.dependency-url=https://nextcloud.weave.local",
+        "weave.workspace.calendar.enabled=true",
+        "weave.workspace.calendar.readiness=degraded"
 })
 class WorkspaceControllerTest {
 
@@ -35,7 +55,7 @@ class WorkspaceControllerTest {
     private JwtDecoder jwtDecoder;
 
     @Test
-    void returnsStaticWorkspaceCapabilities() throws Exception {
+    void returnsConfiguredWorkspaceCapabilities() throws Exception {
         mockMvc.perform(get("/api/v1/workspace/capabilities").with(jwt()
                         .authorities(new SimpleGrantedAuthority("SCOPE_weave:workspace"))))
                 .andExpect(status().isOk())
@@ -43,8 +63,8 @@ class WorkspaceControllerTest {
                 .andExpect(jsonPath("$.shellAccess.readiness").value("ready"))
                 .andExpect(jsonPath("$.chat.readiness").value("ready"))
                 .andExpect(jsonPath("$.files.readiness").value("ready"))
-                .andExpect(jsonPath("$.calendar.enabled").value(false))
-                .andExpect(jsonPath("$.calendar.readiness").value("unavailable"))
+                .andExpect(jsonPath("$.calendar.enabled").value(true))
+                .andExpect(jsonPath("$.calendar.readiness").value("degraded"))
                 .andExpect(jsonPath("$.boards.readiness").value("unavailable"));
     }
 
