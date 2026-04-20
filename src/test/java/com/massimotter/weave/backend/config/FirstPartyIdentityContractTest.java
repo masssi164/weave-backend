@@ -21,6 +21,9 @@ import org.springframework.security.oauth2.jwt.JwtValidationException;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.hamcrest.Matchers.emptyOrNullString;
+import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -60,14 +63,26 @@ class FirstPartyIdentityContractTest {
     void rejectsTokensWithoutRequiredAudience(String tokenValue) throws Exception {
         mockMvc.perform(get("/api/v1/workspace/capabilities")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenValue))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.error").value("Unauthorized"))
+                .andExpect(jsonPath("$.message").value(
+                        "Bearer authentication is required and must satisfy the first-party Weave token contract."))
+                .andExpect(jsonPath("$.path").value(endsWith("/api/v1/workspace/capabilities")))
+                .andExpect(jsonPath("$.timestamp").value(not(emptyOrNullString())));
     }
 
     @Test
     void rejectsTokenWithoutWorkspaceScope() throws Exception {
         mockMvc.perform(get("/api/v1/workspace/capabilities")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer missing-scope"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.error").value("Forbidden"))
+                .andExpect(jsonPath("$.message").value(
+                        "The bearer token is authenticated but missing the required weave:workspace scope."))
+                .andExpect(jsonPath("$.path").value(endsWith("/api/v1/workspace/capabilities")))
+                .andExpect(jsonPath("$.timestamp").value(not(emptyOrNullString())));
     }
 
     @ParameterizedTest
