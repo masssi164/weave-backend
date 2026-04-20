@@ -31,3 +31,16 @@ weave:
     required-audience: ${WEAVE_OIDC_REQUIRED_AUDIENCE:weave-app}
     # JWT azp and/or client_id must identify the first-party Weave app client.
     client-id: ${WEAVE_CLIENT_ID:weave-app}
+  workspace:
+    shell-access:
+      enabled: ${WEAVE_WORKSPACE_SHELL_ACCESS_ENABLED:true}
+    chat:
+      enabled: ${WEAVE_WORKSPACE_CHAT_ENABLED:true}
+      dependency-url: ${WEAVE_MATRIX_HOMESERVER_URL:}
+    files:
+      enabled: ${WEAVE_WORKSPACE_FILES_ENABLED:true}
+      dependency-url: ${WEAVE_NEXTCLOUD_BASE_URL:}
+    calendar:
+      enabled: ${WEAVE_WORKSPACE_CALENDAR_ENABLED:false}
+    boards:
+      enabled: ${WEAVE_WORKSPACE_BOARDS_ENABLED:false}
