@@ -1,8 +1,7 @@
 package com.massimotter.weave.backend.controller;
 
 import com.massimotter.weave.backend.model.WorkspaceCapabilitiesResponse;
-import com.massimotter.weave.backend.model.WorkspaceCapabilityReadiness;
-import com.massimotter.weave.backend.model.WorkspaceCapabilityStatusResponse;
+import com.massimotter.weave.backend.service.WorkspaceCapabilityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,6 +18,12 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Workspace", description = "Workspace readiness and capability endpoints.")
 public class WorkspaceController {
 
+    private final WorkspaceCapabilityService workspaceCapabilityService;
+
+    public WorkspaceController(WorkspaceCapabilityService workspaceCapabilityService) {
+        this.workspaceCapabilityService = workspaceCapabilityService;
+    }
+
     @GetMapping("/capabilities")
     @Operation(
             summary = "Get workspace capability readiness",
@@ -33,11 +38,6 @@ public class WorkspaceController {
             @ApiResponse(responseCode = "403", description = "Bearer token is missing the weave:workspace scope.")
     })
     public WorkspaceCapabilitiesResponse capabilities() {
-        return new WorkspaceCapabilitiesResponse(
-                new WorkspaceCapabilityStatusResponse(true, WorkspaceCapabilityReadiness.READY),
-                new WorkspaceCapabilityStatusResponse(true, WorkspaceCapabilityReadiness.READY),
-                new WorkspaceCapabilityStatusResponse(true, WorkspaceCapabilityReadiness.READY),
-                new WorkspaceCapabilityStatusResponse(false, WorkspaceCapabilityReadiness.UNAVAILABLE),
-                new WorkspaceCapabilityStatusResponse(false, WorkspaceCapabilityReadiness.UNAVAILABLE));
+        return workspaceCapabilityService.snapshot();
     }
 }

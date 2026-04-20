@@ -40,7 +40,21 @@ Optional runtime variables:
 - `WEAVE_OIDC_JWK_SET_URI`: internal JWKS URL for backend key discovery when it differs from the public issuer metadata route
 - `WEAVE_OIDC_REQUIRED_AUDIENCE`: audience required in access tokens, defaults to `weave-app`
 - `WEAVE_CLIENT_ID`: first-party Weave app client ID required in `azp` and/or `client_id`, defaults to `weave-app`
+- `WEAVE_WORKSPACE_SHELL_ACCESS_ENABLED`: enable the authenticated shell contract, defaults to `true`
+- `WEAVE_WORKSPACE_CHAT_ENABLED`: enable chat in the workspace snapshot, defaults to `true`
+- `WEAVE_MATRIX_HOMESERVER_URL`: public Matrix base URL used as the chat readiness source of truth
+- `WEAVE_WORKSPACE_FILES_ENABLED`: enable files in the workspace snapshot, defaults to `true`
+- `WEAVE_NEXTCLOUD_BASE_URL`: public Nextcloud base URL used as the files readiness source of truth
+- `WEAVE_WORKSPACE_CALENDAR_ENABLED`: enable the calendar capability, defaults to `false`
+- `WEAVE_WORKSPACE_BOARDS_ENABLED`: enable the boards capability, defaults to `false`
 - `PORT`: HTTP port, defaults to `8080`
+
+Workspace capability source of truth:
+
+- `shellAccess` is `ready` only when JWT validation can be enforced with a configured issuer, audience, and first-party client contract.
+- `chat` is configuration-backed. It is `ready` when enabled and `WEAVE_MATRIX_HOMESERVER_URL` is configured, `degraded` when enabled without that route, and `blocked` if shell access itself is blocked.
+- `files` is configuration-backed. It is `ready` when enabled and `WEAVE_NEXTCLOUD_BASE_URL` is configured, `degraded` when enabled without that route, and `blocked` if shell access itself is blocked.
+- `calendar` and `boards` stay contract-stable but `unavailable` by default until the workspace explicitly enables them.
 
 Local first-party token contract:
 
