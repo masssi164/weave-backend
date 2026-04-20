@@ -7,6 +7,7 @@ import com.massimotter.weave.backend.config.SecurityConfig;
 import com.massimotter.weave.backend.config.WeaveSecurityProperties;
 import com.massimotter.weave.backend.config.WorkspaceCapabilityProperties;
 import com.massimotter.weave.backend.service.WorkspaceCapabilityService;
+import com.massimotter.weave.backend.service.WorkspaceReleaseReadinessService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
@@ -30,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import({
         SecurityConfig.class,
         WorkspaceCapabilityService.class,
+        WorkspaceReleaseReadinessService.class,
         ApiAuthenticationEntryPoint.class,
         ApiAccessDeniedHandler.class,
         ApiErrorResponseWriter.class
@@ -69,8 +71,23 @@ class WorkspaceControllerTest {
     }
 
     @Test
+    void returnsReleaseReadinessSnapshot() throws Exception {
+        mockMvc.perform(get("/api/v1/workspace/release-readiness").with(jwt()
+                        .authorities(new SimpleGrantedAuthority("SCOPE_weave:workspace"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.readiness").value("ready"))
+                .andExpect(jsonPath("$.checks[0].key").value("auth-contract"))
+                .andExpect(jsonPath("$.checks[1].key").value("chat"))
+                .andExpect(jsonPath("$.checks[2].key").value("files"))
+                .andExpect(jsonPath("$.actions").isEmpty());
+    }
+
+    @Test
     void rejectsAnonymousRequests() throws Exception {
         mockMvc.perform(get("/api/v1/workspace/capabilities"))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(get("/api/v1/workspace/release-readiness"))
                 .andExpect(status().isUnauthorized());
     }
 }
