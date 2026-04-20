@@ -30,8 +30,8 @@ public class WorkspaceCapabilityService {
                 status(workspaceCapabilityProperties.shellAccess(), shellAccessReadiness),
                 dependentStatus(workspaceCapabilityProperties.chat(), shellAccessReadiness),
                 dependentStatus(workspaceCapabilityProperties.files(), shellAccessReadiness),
-                status(workspaceCapabilityProperties.calendar(), WorkspaceCapabilityReadiness.UNAVAILABLE),
-                status(workspaceCapabilityProperties.boards(), WorkspaceCapabilityReadiness.UNAVAILABLE));
+                standaloneStatus(workspaceCapabilityProperties.calendar(), WorkspaceCapabilityReadiness.UNAVAILABLE),
+                standaloneStatus(workspaceCapabilityProperties.boards(), WorkspaceCapabilityReadiness.UNAVAILABLE));
     }
 
     private WorkspaceCapabilityStatusResponse dependentStatus(
@@ -43,13 +43,31 @@ public class WorkspaceCapabilityService {
         if (shellAccessReadiness == WorkspaceCapabilityReadiness.BLOCKED) {
             return status(capability, WorkspaceCapabilityReadiness.BLOCKED);
         }
+        if (capability.readiness() != null) {
+            return status(capability, capability.readiness());
+        }
         if (hasText(capability.dependencyUrl())) {
             return status(capability, WorkspaceCapabilityReadiness.READY);
         }
         return status(capability, WorkspaceCapabilityReadiness.DEGRADED);
     }
 
+    private WorkspaceCapabilityStatusResponse standaloneStatus(
+            WorkspaceCapabilityProperties.Capability capability,
+            WorkspaceCapabilityReadiness defaultReadiness) {
+        if (!capability.enabled()) {
+            return status(capability, WorkspaceCapabilityReadiness.UNAVAILABLE);
+        }
+        if (capability.readiness() != null) {
+            return status(capability, capability.readiness());
+        }
+        return status(capability, defaultReadiness);
+    }
+
     private WorkspaceCapabilityReadiness shellAccessReadiness() {
+        if (!workspaceCapabilityProperties.shellAccess().enabled()) {
+            return WorkspaceCapabilityReadiness.UNAVAILABLE;
+        }
         boolean hasIssuer = hasText(resourceServerProperties.getJwt().getIssuerUri());
         boolean hasAudience = hasText(weaveSecurityProperties.requiredAudience());
         boolean hasClientId = hasText(weaveSecurityProperties.clientId());

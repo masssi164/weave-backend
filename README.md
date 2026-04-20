@@ -42,19 +42,23 @@ Optional runtime variables:
 - `WEAVE_CLIENT_ID`: first-party Weave app client ID required in `azp` and/or `client_id`, defaults to `weave-app`
 - `WEAVE_WORKSPACE_SHELL_ACCESS_ENABLED`: enable the authenticated shell contract, defaults to `true`
 - `WEAVE_WORKSPACE_CHAT_ENABLED`: enable chat in the workspace snapshot, defaults to `true`
-- `WEAVE_MATRIX_HOMESERVER_URL`: public Matrix base URL used as the chat readiness source of truth
+- `WEAVE_MATRIX_HOMESERVER_URL`: public Matrix base URL used by chat auto-readiness
+- `WEAVE_WORKSPACE_CHAT_READINESS`: optional explicit chat readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
 - `WEAVE_WORKSPACE_FILES_ENABLED`: enable files in the workspace snapshot, defaults to `true`
-- `WEAVE_NEXTCLOUD_BASE_URL`: public Nextcloud base URL used as the files readiness source of truth
+- `WEAVE_NEXTCLOUD_BASE_URL`: public Nextcloud base URL used by files auto-readiness
+- `WEAVE_WORKSPACE_FILES_READINESS`: optional explicit files readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
 - `WEAVE_WORKSPACE_CALENDAR_ENABLED`: enable the calendar capability, defaults to `false`
+- `WEAVE_WORKSPACE_CALENDAR_READINESS`: optional explicit calendar readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
 - `WEAVE_WORKSPACE_BOARDS_ENABLED`: enable the boards capability, defaults to `false`
+- `WEAVE_WORKSPACE_BOARDS_READINESS`: optional explicit boards readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
 - `PORT`: HTTP port, defaults to `8080`
 
 Workspace capability source of truth:
 
-- `shellAccess` is `ready` only when JWT validation can be enforced with a configured issuer, audience, and first-party client contract.
-- `chat` is configuration-backed. It is `ready` when enabled and `WEAVE_MATRIX_HOMESERVER_URL` is configured, `degraded` when enabled without that route, and `blocked` if shell access itself is blocked.
-- `files` is configuration-backed. It is `ready` when enabled and `WEAVE_NEXTCLOUD_BASE_URL` is configured, `degraded` when enabled without that route, and `blocked` if shell access itself is blocked.
-- `calendar` and `boards` stay contract-stable but `unavailable` by default until the workspace explicitly enables them.
+- `shellAccess` is `unavailable` when disabled, otherwise `ready` only when JWT validation can be enforced with a configured issuer, audience, and first-party client contract.
+- `chat` is configuration-backed. When enabled it follows `WEAVE_WORKSPACE_CHAT_READINESS` if set, otherwise it is `ready` when `WEAVE_MATRIX_HOMESERVER_URL` is configured, `degraded` without that route, and `blocked` if the shell contract itself is blocked.
+- `files` is configuration-backed. When enabled it follows `WEAVE_WORKSPACE_FILES_READINESS` if set, otherwise it is `ready` when `WEAVE_NEXTCLOUD_BASE_URL` is configured, `degraded` without that route, and `blocked` if the shell contract itself is blocked.
+- `calendar` and `boards` stay contract-stable. They are `unavailable` when disabled, and can intentionally advertise another readiness via their explicit override variables when the workspace wants to surface rollout state.
 
 Local first-party token contract:
 

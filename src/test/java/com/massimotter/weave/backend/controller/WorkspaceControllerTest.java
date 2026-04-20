@@ -33,7 +33,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @org.springframework.test.context.TestPropertySource(properties = {
         "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://auth.example.invalid/realms/weave",
         "weave.workspace.chat.dependency-url=https://matrix.weave.local",
-        "weave.workspace.files.dependency-url=https://nextcloud.weave.local"
+        "weave.workspace.files.dependency-url=https://nextcloud.weave.local",
+        "weave.workspace.calendar.enabled=true",
+        "weave.workspace.calendar.readiness=degraded"
 })
 class WorkspaceControllerTest {
 
@@ -52,8 +54,8 @@ class WorkspaceControllerTest {
                 .andExpect(jsonPath("$.shellAccess.readiness").value("ready"))
                 .andExpect(jsonPath("$.chat.readiness").value("ready"))
                 .andExpect(jsonPath("$.files.readiness").value("ready"))
-                .andExpect(jsonPath("$.calendar.enabled").value(false))
-                .andExpect(jsonPath("$.calendar.readiness").value("unavailable"))
+                .andExpect(jsonPath("$.calendar.enabled").value(true))
+                .andExpect(jsonPath("$.calendar.readiness").value("degraded"))
                 .andExpect(jsonPath("$.boards.readiness").value("unavailable"));
     }
 

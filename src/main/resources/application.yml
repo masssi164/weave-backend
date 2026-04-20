@@ -37,10 +37,14 @@ weave:
     chat:
       enabled: ${WEAVE_WORKSPACE_CHAT_ENABLED:true}
       dependency-url: ${WEAVE_MATRIX_HOMESERVER_URL:}
+      readiness: ${WEAVE_WORKSPACE_CHAT_READINESS:}
     files:
       enabled: ${WEAVE_WORKSPACE_FILES_ENABLED:true}
       dependency-url: ${WEAVE_NEXTCLOUD_BASE_URL:}
+      readiness: ${WEAVE_WORKSPACE_FILES_READINESS:}
     calendar:
       enabled: ${WEAVE_WORKSPACE_CALENDAR_ENABLED:false}
+      readiness: ${WEAVE_WORKSPACE_CALENDAR_READINESS:}
     boards:
       enabled: ${WEAVE_WORKSPACE_BOARDS_ENABLED:false}
+      readiness: ${WEAVE_WORKSPACE_BOARDS_READINESS:}
