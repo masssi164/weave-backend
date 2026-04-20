@@ -33,6 +33,7 @@ class OpenApiDocumentationTest {
                 .andExpect(jsonPath("$.info.title").value("Weave Backend API"))
                 .andExpect(jsonPath("$.paths['/api/v1/me']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/workspace/capabilities']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/workspace/release-readiness']").exists())
                 .andExpect(jsonPath("$.components.schemas.ApiErrorResponse.properties.status.type").value("integer"))
                 .andExpect(jsonPath("$.components.schemas.ApiErrorResponse.properties.message.type").value("string"))
                 .andExpect(jsonPath("$.components.responses.UnauthorizedError.description").value("Missing or invalid bearer token."))

@@ -15,6 +15,7 @@ This repository now starts as a JWT-protected Spring Boot API with:
 
 - a `/api/v1/me` endpoint for claim inspection and client/backend contract testing
 - a `/api/v1/workspace/capabilities` endpoint for the first backend-owned client contract
+- a `/api/v1/workspace/release-readiness` endpoint for operator-facing Release 1 setup status and remaining actions
 - OpenAPI JSON published at `/v3/api-docs`
 - actuator health and info endpoints
 - first-party JWT issuer, audience, client, and workspace-scope validation

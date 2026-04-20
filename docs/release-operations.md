@@ -38,12 +38,15 @@ Protected endpoints return a stable JSON error envelope on auth failures:
 
 Use `401` for missing or invalid tokens. Use `403` when the token is authenticated but does not include `weave:workspace`.
 
+`/api/v1/workspace/release-readiness` is the backend-owned operator snapshot for Release 1. It rolls auth, Matrix chat, and Nextcloud files into one response and lists the exact remaining setup actions when the workspace is still degraded or blocked.
+
 ## Minimum operator checks
 
 - `GET /actuator/health` should return `200 OK`
 - `GET /v3/api-docs` should return the published OpenAPI document
 - `GET /api/v1/me` with a valid first-party token should return caller claims
-- `GET /api/v1/workspace/capabilities` with a valid first-party token should return Release 1 readiness data
+- `GET /api/v1/workspace/capabilities` with a valid first-party token should return the client-facing capability snapshot
+- `GET /api/v1/workspace/release-readiness` with a valid first-party token should return operator-facing Release 1 setup status and remaining actions
 
 ## Logging and audit baseline
 
