@@ -17,7 +17,7 @@ This repository now starts as a JWT-protected Spring Boot API with:
 - a `/api/v1/workspace/capabilities` endpoint for the first backend-owned client contract
 - OpenAPI JSON published at `/v3/api-docs`
 - actuator health and info endpoints
-- optional audience validation for JWTs
+- first-party JWT issuer, audience, client, and workspace-scope validation
 - Gradle wrapper and GitHub Actions CI
 - issue-ready alignment drafts for `weave`, `weave-inf`, and `weave-backend`
 
@@ -33,12 +33,21 @@ The backend should not, by default:
 
 Required runtime variables:
 
-- `WEAVE_OIDC_ISSUER_URI`: issuer URI for the Keycloak realm used by Weave
+- `WEAVE_OIDC_ISSUER_URI`: public issuer URI for the Keycloak realm used by Weave
 
 Optional runtime variables:
 
-- `WEAVE_OIDC_REQUIRED_AUDIENCE`: audience to require in access tokens once `weave-inf` exposes the final audience/token-exchange contract
+- `WEAVE_OIDC_JWK_SET_URI`: internal JWKS URL for backend key discovery when it differs from the public issuer metadata route
+- `WEAVE_OIDC_REQUIRED_AUDIENCE`: audience required in access tokens, defaults to `weave-app`
+- `WEAVE_CLIENT_ID`: first-party Weave app client ID required in `azp` and/or `client_id`, defaults to `weave-app`
 - `PORT`: HTTP port, defaults to `8080`
+
+Local first-party token contract:
+
+- `iss` must match `WEAVE_OIDC_ISSUER_URI`.
+- `aud` must include `weave-app` unless `WEAVE_OIDC_REQUIRED_AUDIENCE` overrides it.
+- `azp` and/or `client_id` must be present and must match `weave-app` unless `WEAVE_CLIENT_ID` overrides it.
+- `scope` must include `weave:workspace` for `/api/v1/**`.
 
 ## Local validation
 
@@ -60,6 +69,14 @@ docker run --rm \
   eclipse-temurin:17-jdk \
   ./gradlew test
 ```
+
+To build the local backend image used by `weave-infra` integration runs:
+
+```bash
+docker build -t weave-backend:e2e .
+```
+
+This Dockerfile-based path is the reproducible local image build for Apple Silicon and other non-x86 hosts.
 
 ## Architecture alignment
 

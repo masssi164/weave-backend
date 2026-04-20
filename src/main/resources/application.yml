@@ -11,6 +11,9 @@ spring:
           # Required. Keycloak realm issuer used to validate JWT iss, exp, nbf, and signature.
           # Example: https://auth.example.com/realms/weave
           issuer-uri: ${WEAVE_OIDC_ISSUER_URI}
+          # Optional. Use when the backend must fetch signing keys through an internal/private route
+          # while preserving the public issuer URI in token validation.
+          jwk-set-uri: ${WEAVE_OIDC_JWK_SET_URI:}
 
 management:
   endpoints:
@@ -24,6 +27,7 @@ management:
 
 weave:
   security:
-    # Optional. When set, JWT aud must include this backend audience or the request is rejected with 401.
-    # Leave empty only for local bootstrap environments before the Keycloak audience mapper is in place.
-    required-audience: ${WEAVE_OIDC_REQUIRED_AUDIENCE:}
+    # JWT aud must include the first-party Weave app audience.
+    required-audience: ${WEAVE_OIDC_REQUIRED_AUDIENCE:weave-app}
+    # JWT azp and/or client_id must identify the first-party Weave app client.
+    client-id: ${WEAVE_CLIENT_ID:weave-app}
