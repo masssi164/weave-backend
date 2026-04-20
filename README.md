@@ -60,6 +60,8 @@ Workspace capability source of truth:
 - `files` is configuration-backed. When enabled it follows `WEAVE_WORKSPACE_FILES_READINESS` if set, otherwise it is `ready` when `WEAVE_NEXTCLOUD_BASE_URL` is configured, `degraded` without that route, and `blocked` if the shell contract itself is blocked.
 - `calendar` and `boards` stay contract-stable. They are `unavailable` when disabled, and can intentionally advertise another readiness via their explicit override variables when the workspace wants to surface rollout state.
 
+See [docs/release-operations.md](docs/release-operations.md) for the Release 1 runtime contract, stable error envelope, and minimum operator checks.
+
 Local first-party token contract:
 
 - `iss` must match `WEAVE_OIDC_ISSUER_URI`.
@@ -96,6 +98,13 @@ docker build -t weave-backend:e2e .
 
 This Dockerfile-based path is the reproducible local image build for Apple Silicon and other non-x86 hosts.
 
+## Release-grade API behavior
+
+- `/api/v1/**` returns structured JSON for `401` and `403` responses.
+- `401` means the bearer token is missing or fails the first-party Weave token contract.
+- `403` means the caller is authenticated but lacks the `weave:workspace` scope.
+- `/v3/api-docs` publishes the same error schema so app and operator tooling can rely on it.
+
 ## Architecture alignment
 
-See [docs/architecture-alignment.md](/Users/flotterotter/code/weave-backend/docs/architecture-alignment.md) and the issue drafts under [docs/issues](/Users/flotterotter/code/weave-backend/docs/issues).
+See [docs/architecture-alignment.md](docs/architecture-alignment.md) and the issue drafts under [docs/issues](docs/issues).

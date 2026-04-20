@@ -1,5 +1,8 @@
 package com.massimotter.weave.backend.controller;
 
+import com.massimotter.weave.backend.config.ApiAccessDeniedHandler;
+import com.massimotter.weave.backend.config.ApiAuthenticationEntryPoint;
+import com.massimotter.weave.backend.config.ApiErrorResponseWriter;
 import com.massimotter.weave.backend.config.SecurityConfig;
 import com.massimotter.weave.backend.config.WeaveSecurityProperties;
 import com.massimotter.weave.backend.config.WorkspaceCapabilityProperties;
@@ -24,7 +27,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(
         controllers = WorkspaceController.class,
         excludeAutoConfiguration = OAuth2ResourceServerAutoConfiguration.class)
-@Import({SecurityConfig.class, WorkspaceCapabilityService.class})
+@Import({
+        SecurityConfig.class,
+        WorkspaceCapabilityService.class,
+        ApiAuthenticationEntryPoint.class,
+        ApiAccessDeniedHandler.class,
+        ApiErrorResponseWriter.class
+})
 @EnableConfigurationProperties({
         WeaveSecurityProperties.class,
         WorkspaceCapabilityProperties.class,
