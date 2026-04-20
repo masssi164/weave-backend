@@ -1,5 +1,6 @@
 package com.massimotter.weave.backend.controller;
 
+import com.massimotter.weave.backend.model.ApiErrorResponse;
 import com.massimotter.weave.backend.model.WorkspaceCapabilitiesResponse;
 import com.massimotter.weave.backend.model.WorkspaceCapabilityReadiness;
 import com.massimotter.weave.backend.model.WorkspaceCapabilityStatusResponse;
@@ -29,8 +30,10 @@ public class WorkspaceController {
                     responseCode = "200",
                     description = "Workspace capability snapshot.",
                     content = @Content(schema = @Schema(implementation = WorkspaceCapabilitiesResponse.class))),
-            @ApiResponse(responseCode = "401", description = "Missing or invalid bearer token."),
-            @ApiResponse(responseCode = "403", description = "Bearer token is missing the weave:workspace scope.")
+            @ApiResponse(responseCode = "401", description = "Missing or invalid bearer token.",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Bearer token is missing the weave:workspace scope.",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     })
     public WorkspaceCapabilitiesResponse capabilities() {
         return new WorkspaceCapabilitiesResponse(

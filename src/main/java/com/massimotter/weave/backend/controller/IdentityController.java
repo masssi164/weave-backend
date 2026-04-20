@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import com.massimotter.weave.backend.model.AuthenticatedUserResponse;
+import com.massimotter.weave.backend.model.ApiErrorResponse;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -32,8 +33,10 @@ public class IdentityController {
                     responseCode = "200",
                     description = "Authenticated caller details.",
                     content = @Content(schema = @Schema(implementation = AuthenticatedUserResponse.class))),
-            @ApiResponse(responseCode = "401", description = "Missing or invalid bearer token."),
-            @ApiResponse(responseCode = "403", description = "Bearer token is missing the weave:workspace scope.")
+            @ApiResponse(responseCode = "401", description = "Missing or invalid bearer token.",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Bearer token is missing the weave:workspace scope.",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     })
     public AuthenticatedUserResponse me(@AuthenticationPrincipal Jwt jwt) {
         return new AuthenticatedUserResponse(

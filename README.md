@@ -42,6 +42,8 @@ Optional runtime variables:
 - `WEAVE_CLIENT_ID`: first-party Weave app client ID required in `azp` and/or `client_id`, defaults to `weave-app`
 - `PORT`: HTTP port, defaults to `8080`
 
+See [docs/release-operations.md](docs/release-operations.md) for the Release 1 runtime contract, stable error envelope, and minimum operator checks.
+
 Local first-party token contract:
 
 - `iss` must match `WEAVE_OIDC_ISSUER_URI`.
@@ -77,6 +79,13 @@ docker build -t weave-backend:e2e .
 ```
 
 This Dockerfile-based path is the reproducible local image build for Apple Silicon and other non-x86 hosts.
+
+## Release-grade API behavior
+
+- `/api/v1/**` returns structured JSON for `401` and `403` responses.
+- `401` means the bearer token is missing or fails the first-party Weave token contract.
+- `403` means the caller is authenticated but lacks the `weave:workspace` scope.
+- `/v3/api-docs` publishes the same error schema so app and operator tooling can rely on it.
 
 ## Architecture alignment
 
