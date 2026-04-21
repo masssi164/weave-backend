@@ -12,6 +12,7 @@ import com.massimotter.weave.backend.model.ApiErrorResponse;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,10 +45,18 @@ public class IdentityController {
                 jwt.getClaimAsString("preferred_username"),
                 jwt.getClaimAsString("name"),
                 jwt.getClaimAsString("email"),
-                jwt.getClaimAsString("azp"),
+                issuedFor(jwt),
                 jwt.getAudience(),
                 extractRealmRoles(jwt),
                 extractStringList(jwt, "groups"));
+    }
+
+    private String issuedFor(Jwt jwt) {
+        return Stream.of(jwt.getClaimAsString("azp"), jwt.getClaimAsString("client_id"))
+                .filter(value -> value != null && !value.isBlank())
+                .map(String::trim)
+                .findFirst()
+                .orElse(null);
     }
 
     private List<String> extractRealmRoles(Jwt jwt) {

@@ -9,8 +9,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
+import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.util.StringUtils;
@@ -23,6 +25,12 @@ public class JwtDecoderConfig {
             OAuth2ResourceServerProperties resourceServerProperties,
             WeaveSecurityProperties weaveSecurityProperties) {
         String issuerUri = resourceServerProperties.getJwt().getIssuerUri();
+        if (!StringUtils.hasText(issuerUri)) {
+            return token -> {
+                throw new BadJwtException("The backend JWT issuer is not configured.");
+            };
+        }
+
         String jwkSetUri = resourceServerProperties.getJwt().getJwkSetUri();
         NimbusJwtDecoder jwtDecoder = StringUtils.hasText(jwkSetUri)
                 ? NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build()
