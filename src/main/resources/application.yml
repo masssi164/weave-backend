@@ -8,9 +8,10 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          # Required. Keycloak realm issuer used to validate JWT iss, exp, nbf, and signature.
+          # Required for a ready auth contract. Leave blank to start in blocked mode until
+          # the backend can validate JWT iss, exp, nbf, and signature against the public issuer.
           # Example: https://auth.example.com/realms/weave
-          issuer-uri: ${WEAVE_OIDC_ISSUER_URI}
+          issuer-uri: ${WEAVE_OIDC_ISSUER_URI:}
           # Optional. Use when the backend must fetch signing keys through an internal/private route
           # while preserving the public issuer URI in token validation.
           jwk-set-uri: ${WEAVE_OIDC_JWK_SET_URI:}

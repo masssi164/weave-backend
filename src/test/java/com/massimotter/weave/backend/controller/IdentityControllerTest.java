@@ -62,4 +62,15 @@ class IdentityControllerTest {
         mockMvc.perform(get("/api/v1/me"))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void fallsBackToClientIdWhenAzpIsAbsent() throws Exception {
+        mockMvc.perform(get("/api/v1/me").with(jwt().jwt(jwt -> jwt
+                        .subject("user-123")
+                        .claim("client_id", "weave-app")
+                        .claim("aud", List.of("weave-app")))
+                        .authorities(new SimpleGrantedAuthority("SCOPE_weave:workspace"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.issuedFor").value("weave-app"));
+    }
 }

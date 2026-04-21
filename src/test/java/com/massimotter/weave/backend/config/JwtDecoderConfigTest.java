@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.JwtValidationException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,6 +55,15 @@ class JwtDecoderConfigTest {
             assertThrows(JwtValidationException.class,
                     () -> jwtDecoder.decode(signedToken(signingKey, "https://wrong.example.invalid/realms/weave")));
         }
+    }
+
+    @Test
+    void failsClosedWhenIssuerIsMissing() {
+        OAuth2ResourceServerProperties properties = new OAuth2ResourceServerProperties();
+
+        JwtDecoder jwtDecoder = new JwtDecoderConfig().jwtDecoder(properties, new WeaveSecurityProperties(null, null));
+
+        assertThrows(JwtException.class, () -> jwtDecoder.decode("token-value"));
     }
 
     private JwtDecoder jwtDecoder(String jwkSetUri) {
