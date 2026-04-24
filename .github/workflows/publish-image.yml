@@ -18,9 +18,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  live-stack-e2e:
+    name: Verify Backend Commit In Live Stack
+    if: github.ref == 'refs/heads/main'
+    uses: masssi164/weave/.github/workflows/live-stack-e2e.yml@main
+    with:
+      weave_backend_repo: ${{ github.repository }}
+      weave_backend_ref: ${{ github.sha }}
+
   publish:
     name: Build And Publish GHCR Image
+    if: ${{ needs.live-stack-e2e.result == 'success' || needs.live-stack-e2e.result == 'skipped' }}
     runs-on: ubuntu-latest
+    needs: live-stack-e2e
     outputs:
       image_ref: ghcr.io/${{ github.repository_owner }}/weave-backend:sha-${{ github.sha }}
 
@@ -65,11 +75,3 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-  live-stack-e2e:
-    name: Verify Published Image In Live Stack
-    if: github.ref == 'refs/heads/main'
-    needs: publish
-    uses: masssi164/weave/.github/workflows/live-stack-e2e.yml@main
-    with:
-      weave_backend_image: ${{ needs.publish.outputs.image_ref }}
