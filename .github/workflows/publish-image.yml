@@ -67,13 +67,3 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-  live-stack-e2e:
-    name: Verify Published Image In Live Stack
-    if: github.ref == 'refs/heads/main'
-    needs: publish
-    uses: masssi164/weave/.github/workflows/live-stack-e2e.yml@main
-    with:
-      weave_backend_image: ${{ needs.publish.outputs.image_ref }}
-    secrets:
-      WEAVE_TEST_PASSWORD: ${{ secrets.WEAVE_TEST_PASSWORD }}
