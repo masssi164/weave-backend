@@ -16,12 +16,12 @@ Older `weave-inf` revisions defaulted to an HTTP ingress on `:8090` and service-
   - `<tenant_domain>` for the product gateway and `/api`
   - `auth.<tenant_domain>`
   - `matrix.<tenant_domain>`
-  - `files.<tenant_domain>` for raw Nextcloud fallback
+  - `files.<tenant_domain>` for canonical Nextcloud URL
 - Export the final browser-facing URLs as Terraform outputs or generated install metadata for client/backend consumers
 
 ## Acceptance criteria
 
 - the stack can be reached over HTTPS with the configured hostnames
-- Nextcloud uses `files.<tenant_domain>` as the raw fallback while the product gateway owns `/files`
+- Nextcloud uses `files.<tenant_domain>` as the canonical Nextcloud URL while the product gateway owns the Weave `/files` product route
 - installer output shows the HTTPS URLs that the client and backend should consume
 - local bootstrap docs include the trusted certificate/dev CA step needed for mobile or desktop testing
