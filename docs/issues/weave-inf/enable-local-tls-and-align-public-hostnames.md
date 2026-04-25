@@ -16,7 +16,7 @@ Older `weave-inf` revisions defaulted to an HTTP ingress on `:8090` and service-
   - `<tenant_domain>` for the product gateway and `/api`
   - `auth.<tenant_domain>`
   - `matrix.<tenant_domain>`
-  - `files.<tenant_domain>` for raw Nextcloud fallback
+  - `files.<tenant_domain>` for canonical Nextcloud URL
 - Export the final browser-facing URLs as Terraform outputs or generated install metadata for client/backend consumers
 
 ## Acceptance criteria

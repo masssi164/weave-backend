@@ -130,7 +130,7 @@ public class WorkspaceReleaseReadinessService {
                     "Nextcloud files route",
                     readiness,
                     "Files are enabled but no Nextcloud route is configured yet.",
-                    "Set WEAVE_NEXTCLOUD_BASE_URL to the raw Nextcloud fallback URL, for example https://files.weave.local.");
+                    "Set WEAVE_NEXTCLOUD_BASE_URL to the canonical Nextcloud URL, for example https://files.weave.local.");
             case BLOCKED -> new WorkspaceReleaseReadinessCheckResponse(
                     "files",
                     "Nextcloud files route",
