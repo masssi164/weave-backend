@@ -43,18 +43,44 @@ class IdentityControllerTest {
                         .claim("preferred_username", "alice")
                         .claim("name", "Alice Example")
                         .claim("email", "alice@example.com")
+                        .claim("email_verified", true)
+                        .claim("locale", "en")
+                        .claim("timezone", "Europe/Berlin")
                         .claim("azp", "weave-app")
                         .claim("aud", List.of("weave-app", "account"))
                         .claim("realm_access", Map.of("roles", List.of("member", "admin")))
                         .claim("groups", List.of("team-alpha", "team-beta")))
                         .authorities(new SimpleGrantedAuthority("SCOPE_weave:workspace"))))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.userId").value("user-123"))
+                .andExpect(jsonPath("$.username").value("alice"))
+                .andExpect(jsonPath("$.displayName").value("Alice Example"))
+                .andExpect(jsonPath("$.emailVerified").value(true))
+                .andExpect(jsonPath("$.timezone").value("Europe/Berlin"))
+                .andExpect(jsonPath("$.roles[0]").value("admin"))
+                .andExpect(jsonPath("$.moduleSyncStatus.matrix").value("not_configured"))
                 .andExpect(jsonPath("$.sub").value("user-123"))
                 .andExpect(jsonPath("$.preferredUsername").value("alice"))
                 .andExpect(jsonPath("$.issuedFor").value("weave-app"))
                 .andExpect(jsonPath("$.audience[0]").value("weave-app"))
                 .andExpect(jsonPath("$.realmRoles[0]").value("admin"))
                 .andExpect(jsonPath("$.groups[1]").value("team-beta"));
+    }
+
+    @Test
+    void exposesCanonicalMeEndpoint() throws Exception {
+        mockMvc.perform(get("/api/me").with(jwt().jwt(jwt -> jwt
+                        .subject("user-123")
+                        .claim("preferred_username", "alice")
+                        .claim("name", "Alice Example")
+                        .claim("email", "alice@example.com")
+                        .claim("aud", List.of("weave-app")))
+                        .authorities(new SimpleGrantedAuthority("SCOPE_weave:workspace"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.userId").value("user-123"))
+                .andExpect(jsonPath("$.username").value("alice"))
+                .andExpect(jsonPath("$.email").value("alice@example.com"))
+                .andExpect(jsonPath("$.displayName").value("Alice Example"));
     }
 
     @Test

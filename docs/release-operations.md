@@ -13,26 +13,38 @@ Optional:
 - `WEAVE_OIDC_JWK_SET_URI`: internal JWKS URL when the backend cannot use the issuer metadata endpoint directly
 - `WEAVE_OIDC_REQUIRED_AUDIENCE`: required audience in Weave access tokens, defaults to `weave-app`
 - `WEAVE_CLIENT_ID`: required first-party client identifier in `azp` and/or `client_id`, defaults to `weave-app`
+- `WEAVE_PUBLIC_BASE_URL`: public product entrypoint, defaults to `https://weave.local`
+- `WEAVE_API_BASE_URL`: public backend API base URL, defaults to `https://weave.local/api`
+- `WEAVE_AUTH_BASE_URL`: public Keycloak base URL, defaults to `https://auth.weave.local`
+- `WEAVE_MATRIX_BASE_URL`: public Matrix base URL, defaults to `https://matrix.weave.local`
+- `WEAVE_FILES_PRODUCT_URL`: public files product surface, defaults to `https://weave.local/files`
+- `WEAVE_CALENDAR_PRODUCT_URL`: public calendar product surface, defaults to `https://weave.local/calendar`
+- `WEAVE_NEXTCLOUD_RAW_BASE_URL`: raw Nextcloud fallback URL, defaults to `https://files.weave.local`
 - `PORT`: HTTP listen port, defaults to `8080`
 
 ## Protected API behavior
 
-All `/api/v1/**` routes require a bearer token that satisfies the first-party Weave contract:
+Protected `/api/**` routes require a bearer token that satisfies the first-party Weave contract:
 
 - `iss` matches `WEAVE_OIDC_ISSUER_URI`
 - `aud` includes `WEAVE_OIDC_REQUIRED_AUDIENCE`
 - `azp` and/or `client_id` matches `WEAVE_CLIENT_ID`
 - `scope` includes `weave:workspace`
 
-Protected endpoints return a stable JSON error envelope on auth failures:
+`/api/health/live`, `/api/health/ready`, `/api/platform/config`, and `/api/platform/status` are public diagnostics/bootstrap endpoints.
+
+Protected endpoints return a stable JSON error envelope on auth failures and include the same request id in `X-Request-Id`:
 
 ```json
 {
-  "timestamp": "2026-04-20T11:32:15.123Z",
-  "status": 401,
-  "error": "Unauthorized",
+  "code": "unauthorized",
   "message": "Bearer authentication is required and must satisfy the first-party Weave token contract.",
-  "path": "/api/v1/workspace/capabilities"
+  "details": {
+    "status": 401,
+    "path": "/api/v1/workspace/capabilities",
+    "error": "Unauthorized"
+  },
+  "requestId": "01HV..."
 }
 ```
 
@@ -42,9 +54,11 @@ Use `401` for missing or invalid tokens. Use `403` when the token is authenticat
 
 ## Minimum operator checks
 
-- `GET /actuator/health` should return `200 OK`
+- `GET /api/health/ready` should return `200 OK`
 - `GET /v3/api-docs` should return the published OpenAPI document
-- `GET /api/v1/me` with a valid first-party token should return caller claims
+- `GET /api/platform/config` should return public product URLs and module flags
+- `GET /api/platform/status` should return module status for smoke and diagnostics
+- `GET /api/me` with a valid first-party token should return caller claims
 - `GET /api/v1/workspace/capabilities` with a valid first-party token should return the client-facing capability snapshot
 - `GET /api/v1/workspace/release-readiness` with a valid first-party token should return operator-facing Release 1 setup status and remaining actions
 

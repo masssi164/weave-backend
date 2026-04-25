@@ -31,11 +31,17 @@ class OpenApiDocumentationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.openapi").value(startsWith("3.")))
                 .andExpect(jsonPath("$.info.title").value("Weave Backend API"))
+                .andExpect(jsonPath("$.paths['/api/me']").exists())
+                .andExpect(jsonPath("$.paths['/api/health/live']").exists())
+                .andExpect(jsonPath("$.paths['/api/health/ready']").exists())
+                .andExpect(jsonPath("$.paths['/api/platform/config']").exists())
+                .andExpect(jsonPath("$.paths['/api/platform/status']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/me']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/workspace/capabilities']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/workspace/release-readiness']").exists())
-                .andExpect(jsonPath("$.components.schemas.ApiErrorResponse.properties.status.type").value("integer"))
+                .andExpect(jsonPath("$.components.schemas.ApiErrorResponse.properties.code.type").value("string"))
                 .andExpect(jsonPath("$.components.schemas.ApiErrorResponse.properties.message.type").value("string"))
+                .andExpect(jsonPath("$.components.schemas.ApiErrorResponse.properties.requestId.type").value("string"))
                 .andExpect(jsonPath("$.components.responses.UnauthorizedError.description").value("Missing or invalid bearer token."))
                 .andExpect(jsonPath("$.components.securitySchemes['bearer-jwt'].type").value("http"));
     }

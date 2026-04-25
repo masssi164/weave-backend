@@ -32,8 +32,8 @@ Own the runnable environment and integration contract:
 ## Gaps found in the current state
 
 1. `weave` uses `com.massimotter.weave:/oauthredirect` and `com.massimotter.weave:/logout`, while `weave-inf` currently registers `weaveapp://login/callback` for the `weave-app` Keycloak client.
-2. `weave` derives `https://nextcloud.<base-domain>`, while `weave-inf` currently exposes Nextcloud on `files.<tenant_domain>`.
-3. `weave` requires an HTTPS issuer and enforces HTTPS for live Nextcloud use, while `weave-inf` still defaults to `http://...:8090` local ingress.
+2. Older client defaults derived `nextcloud.<base-domain>` and `api.<base-domain>` instead of the final `files.<base-domain>` raw fallback and `<base-domain>/api` product API route.
+3. Older local infrastructure exposed service-specific localhost routes instead of the final `https://weave.local` gateway plus `https://auth.weave.local`, `https://matrix.weave.local`, and `https://files.weave.local`.
 4. The original `weave-backend` spike assumed that user bearer tokens could be forwarded directly into Nextcloud and Matrix calls. That is the wrong default boundary for this stack.
 5. The original backend spike did not compile in a clean Gradle/JDK environment because it used `WebClient` types without the needed reactive dependency and mixed incompatible OAuth client wiring.
 

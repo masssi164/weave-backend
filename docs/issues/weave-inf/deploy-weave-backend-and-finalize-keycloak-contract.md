@@ -10,7 +10,7 @@
 
 ## Proposal
 
-- Add a backend runtime to the infrastructure stack, exposed on a dedicated host such as `api.<tenant_domain>`
+- Add a backend runtime to the infrastructure stack, exposed through the product gateway at `https://<tenant_domain>/api`
 - Promote the backend client model from placeholder to a documented contract:
   - issuer URI
   - backend base URL
