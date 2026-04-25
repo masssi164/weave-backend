@@ -39,10 +39,6 @@ weave:
       mobile: ${WEAVE_TARGET_MOBILE:true}
       desktop: ${WEAVE_TARGET_DESKTOP:true}
       web: ${WEAVE_TARGET_WEB:false}
-    features:
-      chat: ${WEAVE_FEATURE_CHAT_ENABLED:true}
-      files: ${WEAVE_FEATURE_FILES_ENABLED:true}
-      calendar: ${WEAVE_FEATURE_CALENDAR_ENABLED:true}
   security:
     # JWT aud must include the first-party Weave app audience.
     required-audience: ${WEAVE_OIDC_REQUIRED_AUDIENCE:weave-app}
@@ -60,7 +56,7 @@ weave:
       dependency-url: ${WEAVE_NEXTCLOUD_BASE_URL:${WEAVE_NEXTCLOUD_RAW_BASE_URL:https://files.weave.local}}
       readiness: ${WEAVE_WORKSPACE_FILES_READINESS:}
     calendar:
-      enabled: ${WEAVE_WORKSPACE_CALENDAR_ENABLED:true}
+      enabled: ${WEAVE_WORKSPACE_CALENDAR_ENABLED:false}
       readiness: ${WEAVE_WORKSPACE_CALENDAR_READINESS:}
     boards:
       enabled: ${WEAVE_WORKSPACE_BOARDS_ENABLED:false}
