@@ -49,7 +49,7 @@ Optional runtime variables:
 - `WEAVE_MATRIX_HOMESERVER_URL`: public Matrix base URL used by chat auto-readiness
 - `WEAVE_WORKSPACE_CHAT_READINESS`: optional explicit chat readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
 - `WEAVE_WORKSPACE_FILES_ENABLED`: enable files in the workspace snapshot, defaults to `true`
-- `WEAVE_NEXTCLOUD_BASE_URL`: public Nextcloud base URL used by files auto-readiness
+- `WEAVE_NEXTCLOUD_BASE_URL`: canonical Nextcloud URL used by files auto-readiness
 - `WEAVE_WORKSPACE_FILES_READINESS`: optional explicit files readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
 - `WEAVE_WORKSPACE_CALENDAR_ENABLED`: enable the calendar capability, defaults to `false`
 - `WEAVE_WORKSPACE_CALENDAR_READINESS`: optional explicit calendar readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
@@ -58,7 +58,7 @@ Optional runtime variables:
 - `WEAVE_PUBLIC_BASE_URL`: public product entrypoint, defaults to `https://weave.local`
 - `WEAVE_API_BASE_URL`: public backend API base URL, defaults to `https://weave.local/api`
 - `WEAVE_AUTH_BASE_URL`: public Keycloak base URL, defaults to `https://auth.weave.local`
-- `WEAVE_MATRIX_BASE_URL`: public Matrix base URL, defaults to `https://matrix.weave.local`
+- `WEAVE_MATRIX_HOMESERVER_URL`: public Matrix homeserver URL, defaults to `https://matrix.weave.local` (`WEAVE_MATRIX_BASE_URL` remains a compatibility alias)
 - `WEAVE_FILES_PRODUCT_URL`: public files product surface, defaults to `https://weave.local/files`
 - `WEAVE_CALENDAR_PRODUCT_URL`: public calendar product surface, defaults to `https://weave.local/calendar`
 - `WEAVE_NEXTCLOUD_BASE_URL`: canonical Nextcloud URL, defaults to `https://files.weave.local` (`WEAVE_NEXTCLOUD_RAW_BASE_URL` remains a compatibility alias)

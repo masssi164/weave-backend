@@ -31,7 +31,7 @@ weave:
     public-base-url: ${WEAVE_PUBLIC_BASE_URL:https://weave.local}
     api-base-url: ${WEAVE_API_BASE_URL:https://weave.local/api}
     auth-base-url: ${WEAVE_AUTH_BASE_URL:https://auth.weave.local}
-    matrix-base-url: ${WEAVE_MATRIX_BASE_URL:${WEAVE_MATRIX_HOMESERVER_URL:https://matrix.weave.local}}
+    matrix-base-url: ${WEAVE_MATRIX_HOMESERVER_URL:${WEAVE_MATRIX_BASE_URL:https://matrix.weave.local}}
     files-product-url: ${WEAVE_FILES_PRODUCT_URL:https://weave.local/files}
     calendar-product-url: ${WEAVE_CALENDAR_PRODUCT_URL:https://weave.local/calendar}
     nextcloud-raw-base-url: ${WEAVE_NEXTCLOUD_BASE_URL:${WEAVE_NEXTCLOUD_RAW_BASE_URL:https://files.weave.local}}
