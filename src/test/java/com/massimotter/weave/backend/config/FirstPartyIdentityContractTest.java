@@ -21,9 +21,8 @@ import org.springframework.security.oauth2.jwt.JwtValidationException;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.endsWith;
-import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -64,12 +63,12 @@ class FirstPartyIdentityContractTest {
         mockMvc.perform(get("/api/v1/workspace/capabilities")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenValue))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.status").value(401))
-                .andExpect(jsonPath("$.error").value("Unauthorized"))
+                .andExpect(jsonPath("$.code").value("unauthorized"))
                 .andExpect(jsonPath("$.message").value(
                         "Bearer authentication is required and must satisfy the first-party Weave token contract."))
-                .andExpect(jsonPath("$.path").value(endsWith("/api/v1/workspace/capabilities")))
-                .andExpect(jsonPath("$.timestamp").value(not(emptyOrNullString())));
+                .andExpect(jsonPath("$.details.status").value(401))
+                .andExpect(jsonPath("$.details.path").value(endsWith("/api/v1/workspace/capabilities")))
+                .andExpect(jsonPath("$.requestId").value(notNullValue()));
     }
 
     @Test
@@ -77,12 +76,12 @@ class FirstPartyIdentityContractTest {
         mockMvc.perform(get("/api/v1/workspace/capabilities")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer missing-scope"))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.status").value(403))
-                .andExpect(jsonPath("$.error").value("Forbidden"))
+                .andExpect(jsonPath("$.code").value("forbidden"))
                 .andExpect(jsonPath("$.message").value(
                         "The bearer token is authenticated but missing the required weave:workspace scope."))
-                .andExpect(jsonPath("$.path").value(endsWith("/api/v1/workspace/capabilities")))
-                .andExpect(jsonPath("$.timestamp").value(not(emptyOrNullString())));
+                .andExpect(jsonPath("$.details.status").value(403))
+                .andExpect(jsonPath("$.details.path").value(endsWith("/api/v1/workspace/capabilities")))
+                .andExpect(jsonPath("$.requestId").value(notNullValue()));
     }
 
     @ParameterizedTest
@@ -110,7 +109,8 @@ class FirstPartyIdentityContractTest {
         mockMvc.perform(get("/api/v1/me")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer client-id-only"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.issuedFor").value(FIRST_PARTY_CLIENT_ID));
+                .andExpect(jsonPath("$.issuedFor").value(FIRST_PARTY_CLIENT_ID))
+                .andExpect(jsonPath("$.userId").value("user-123"));
     }
 
     @Test
@@ -118,8 +118,10 @@ class FirstPartyIdentityContractTest {
         mockMvc.perform(get("/api/v1/me")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer valid-full-token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.sub").value("user-123"))
-                .andExpect(jsonPath("$.preferredUsername").value("alice"))
+                .andExpect(jsonPath("$.userId").value("user-123"))
+                .andExpect(jsonPath("$.username").value("alice"))
+                .andExpect(jsonPath("$.emailVerified").value(false))
+                .andExpect(jsonPath("$.displayName").value("Alice Example"))
                 .andExpect(jsonPath("$.issuedFor").value(FIRST_PARTY_CLIENT_ID))
                 .andExpect(jsonPath("$.audience[0]").value(REQUIRED_AUDIENCE))
                 .andExpect(jsonPath("$.realmRoles[0]").value("member"));

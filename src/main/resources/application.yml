@@ -27,6 +27,22 @@ management:
         enabled: true
 
 weave:
+  platform:
+    public-base-url: ${WEAVE_PUBLIC_BASE_URL:https://weave.local}
+    api-base-url: ${WEAVE_API_BASE_URL:https://weave.local/api}
+    auth-base-url: ${WEAVE_AUTH_BASE_URL:https://auth.weave.local}
+    matrix-base-url: ${WEAVE_MATRIX_BASE_URL:${WEAVE_MATRIX_HOMESERVER_URL:https://matrix.weave.local}}
+    files-product-url: ${WEAVE_FILES_PRODUCT_URL:https://weave.local/files}
+    calendar-product-url: ${WEAVE_CALENDAR_PRODUCT_URL:https://weave.local/calendar}
+    nextcloud-raw-base-url: ${WEAVE_NEXTCLOUD_RAW_BASE_URL:${WEAVE_NEXTCLOUD_BASE_URL:https://files.weave.local}}
+    targets:
+      mobile: ${WEAVE_TARGET_MOBILE:true}
+      desktop: ${WEAVE_TARGET_DESKTOP:true}
+      web: ${WEAVE_TARGET_WEB:false}
+    features:
+      chat: ${WEAVE_FEATURE_CHAT_ENABLED:true}
+      files: ${WEAVE_FEATURE_FILES_ENABLED:true}
+      calendar: ${WEAVE_FEATURE_CALENDAR_ENABLED:true}
   security:
     # JWT aud must include the first-party Weave app audience.
     required-audience: ${WEAVE_OIDC_REQUIRED_AUDIENCE:weave-app}
@@ -37,14 +53,14 @@ weave:
       enabled: ${WEAVE_WORKSPACE_SHELL_ACCESS_ENABLED:true}
     chat:
       enabled: ${WEAVE_WORKSPACE_CHAT_ENABLED:true}
-      dependency-url: ${WEAVE_MATRIX_HOMESERVER_URL:}
+      dependency-url: ${WEAVE_MATRIX_HOMESERVER_URL:${WEAVE_MATRIX_BASE_URL:https://matrix.weave.local}}
       readiness: ${WEAVE_WORKSPACE_CHAT_READINESS:}
     files:
       enabled: ${WEAVE_WORKSPACE_FILES_ENABLED:true}
-      dependency-url: ${WEAVE_NEXTCLOUD_BASE_URL:}
+      dependency-url: ${WEAVE_NEXTCLOUD_BASE_URL:${WEAVE_NEXTCLOUD_RAW_BASE_URL:https://files.weave.local}}
       readiness: ${WEAVE_WORKSPACE_FILES_READINESS:}
     calendar:
-      enabled: ${WEAVE_WORKSPACE_CALENDAR_ENABLED:false}
+      enabled: ${WEAVE_WORKSPACE_CALENDAR_ENABLED:true}
       readiness: ${WEAVE_WORKSPACE_CALENDAR_READINESS:}
     boards:
       enabled: ${WEAVE_WORKSPACE_BOARDS_ENABLED:false}

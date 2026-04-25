@@ -25,6 +25,7 @@ public class ApiAccessDeniedHandler implements AccessDeniedHandler {
                 request,
                 response,
                 HttpStatus.FORBIDDEN,
+                "forbidden",
                 "The bearer token is authenticated but missing the required weave:workspace scope.");
     }
 }

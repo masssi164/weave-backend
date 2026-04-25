@@ -13,7 +13,10 @@ The backend should act as a product API and orchestration layer, not as a blind 
 
 This repository now starts as a JWT-protected Spring Boot API with:
 
-- a `/api/v1/me` endpoint for claim inspection and client/backend contract testing
+- `/api/health/live` and `/api/health/ready` endpoints for gateway and smoke checks
+- `/api/platform/config` and `/api/platform/status` endpoints for client bootstrap and diagnostics
+- a canonical `/api/me` endpoint for profile claim inspection and client/backend contract testing
+- a compatibility `/api/v1/me` endpoint retained during the transition
 - a `/api/v1/workspace/capabilities` endpoint for the first backend-owned client contract
 - a `/api/v1/workspace/release-readiness` endpoint for operator-facing Release 1 setup status and remaining actions
 - OpenAPI JSON published at `/v3/api-docs`
@@ -52,6 +55,13 @@ Optional runtime variables:
 - `WEAVE_WORKSPACE_CALENDAR_READINESS`: optional explicit calendar readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
 - `WEAVE_WORKSPACE_BOARDS_ENABLED`: enable the boards capability, defaults to `false`
 - `WEAVE_WORKSPACE_BOARDS_READINESS`: optional explicit boards readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
+- `WEAVE_PUBLIC_BASE_URL`: public product entrypoint, defaults to `https://weave.local`
+- `WEAVE_API_BASE_URL`: public backend API base URL, defaults to `https://weave.local/api`
+- `WEAVE_AUTH_BASE_URL`: public Keycloak base URL, defaults to `https://auth.weave.local`
+- `WEAVE_MATRIX_BASE_URL`: public Matrix base URL, defaults to `https://matrix.weave.local`
+- `WEAVE_FILES_PRODUCT_URL`: public files product surface, defaults to `https://weave.local/files`
+- `WEAVE_CALENDAR_PRODUCT_URL`: public calendar product surface, defaults to `https://weave.local/calendar`
+- `WEAVE_NEXTCLOUD_RAW_BASE_URL`: raw Nextcloud fallback URL, defaults to `https://files.weave.local`
 - `PORT`: HTTP port, defaults to `8080`
 
 Workspace capability source of truth:
@@ -68,7 +78,7 @@ Local first-party token contract:
 - `iss` must match `WEAVE_OIDC_ISSUER_URI`.
 - `aud` must include `weave-app` unless `WEAVE_OIDC_REQUIRED_AUDIENCE` overrides it.
 - `azp` and/or `client_id` must be present and must match `weave-app` unless `WEAVE_CLIENT_ID` overrides it.
-- `scope` must include `weave:workspace` for `/api/v1/**`.
+- `scope` must include `weave:workspace` for protected `/api/**` routes. Public platform, liveness, and readiness endpoints are unauthenticated.
 
 ## Local validation
 
@@ -101,9 +111,10 @@ This Dockerfile-based path is the reproducible local image build for Apple Silic
 
 ## Release-grade API behavior
 
-- `/api/v1/**` returns structured JSON for `401` and `403` responses.
+- Protected `/api/**` routes return structured JSON for `401` and `403` responses.
 - `401` means the bearer token is missing or fails the first-party Weave token contract.
 - `403` means the caller is authenticated but lacks the `weave:workspace` scope.
+- The stable error envelope is `code`, `message`, `details`, and `requestId`; the response also includes `X-Request-Id`.
 - `/v3/api-docs` publishes the same error schema so app and operator tooling can rely on it.
 
 ## Architecture alignment

@@ -24,9 +24,10 @@ class MissingIssuerRuntimeContractTest {
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/v1/me")
-                        .header(AUTHORIZATION, "Bearer invalid-without-issuer"))
+                .header(AUTHORIZATION, "Bearer invalid-without-issuer"))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Unauthorized"))
+                .andExpect(jsonPath("$.code").value("unauthorized"))
+                .andExpect(jsonPath("$.details.status").value(401))
                 .andExpect(jsonPath("$.message").value(
                         "Bearer authentication is required and must satisfy the first-party Weave token contract."));
     }

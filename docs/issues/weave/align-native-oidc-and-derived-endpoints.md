@@ -6,14 +6,15 @@
 
 - OIDC redirect: `com.massimotter.weave:/oauthredirect`
 - OIDC post-logout redirect: `com.massimotter.weave:/logout`
-- derived Nextcloud URL: `https://nextcloud.<base-domain>`
+- derived raw Nextcloud fallback URL: `https://files.<base-domain>`
+- derived backend API URL: `https://<base-domain>/api`
 
-The current `weave-inf` setup still registers `weaveapp://login/callback` for the Keycloak client and exposes Nextcloud on `files.<tenant_domain>`, so the default infrastructure contract does not match the client code.
+Older `weave-inf` setup registered `weaveapp://login/callback` for the Keycloak client and older app defaults derived service-specific hosts that no longer match the final product topology.
 
 ## Proposal
 
 - Align the client-side constants and onboarding/help copy with the final infrastructure contract
-- Prefer `nextcloud.<base-domain>` as the default host to match the current app architecture and naming
+- Prefer `files.<base-domain>` for the raw Nextcloud fallback and `<base-domain>/api` for the product API route
 - Make the redirect URI contract explicit in app docs so infra changes do not silently break native sign-in
 
 ## Acceptance criteria

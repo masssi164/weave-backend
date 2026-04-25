@@ -25,6 +25,7 @@ public class ApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
                 request,
                 response,
                 HttpStatus.UNAUTHORIZED,
+                "unauthorized",
                 "Bearer authentication is required and must satisfy the first-party Weave token contract.");
     }
 }

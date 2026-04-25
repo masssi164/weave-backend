@@ -18,7 +18,7 @@ class WorkspaceReleaseReadinessServiceTest {
                 new WorkspaceCapabilityProperties(
                         new WorkspaceCapabilityProperties.Capability(true, null, null),
                         new WorkspaceCapabilityProperties.Capability(true, "https://matrix.weave.local", null),
-                        new WorkspaceCapabilityProperties.Capability(true, "https://nextcloud.weave.local", null),
+                        new WorkspaceCapabilityProperties.Capability(true, "https://files.weave.local", null),
                         null,
                         null));
 
@@ -28,7 +28,7 @@ class WorkspaceReleaseReadinessServiceTest {
                 new WorkspaceCapabilityProperties(
                         new WorkspaceCapabilityProperties.Capability(true, null, null),
                         new WorkspaceCapabilityProperties.Capability(true, "https://matrix.weave.local", null),
-                        new WorkspaceCapabilityProperties.Capability(true, "https://nextcloud.weave.local", null),
+                        new WorkspaceCapabilityProperties.Capability(true, "https://files.weave.local", null),
                         null,
                         null),
                 capabilityService);
@@ -90,7 +90,7 @@ class WorkspaceReleaseReadinessServiceTest {
         assertThat(snapshot.readiness()).isEqualTo(WorkspaceCapabilityReadiness.DEGRADED);
         assertThat(snapshot.actions()).containsExactly(
                 "Set WEAVE_MATRIX_HOMESERVER_URL to the public Matrix base URL, for example https://matrix.weave.local.",
-                "Set WEAVE_NEXTCLOUD_BASE_URL to the public Nextcloud base URL, for example https://nextcloud.weave.local.");
+                "Set WEAVE_NEXTCLOUD_BASE_URL to the raw Nextcloud fallback URL, for example https://files.weave.local.");
     }
 
     private OAuth2ResourceServerProperties resourceServerProperties(String issuerUri) {

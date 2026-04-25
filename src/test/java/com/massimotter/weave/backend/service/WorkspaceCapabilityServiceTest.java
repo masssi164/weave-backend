@@ -34,7 +34,7 @@ class WorkspaceCapabilityServiceTest {
                 new WorkspaceCapabilityProperties(
                         new WorkspaceCapabilityProperties.Capability(true, null, null),
                         new WorkspaceCapabilityProperties.Capability(true, "https://matrix.weave.local", null),
-                        new WorkspaceCapabilityProperties.Capability(true, "https://nextcloud.weave.local", null),
+                        new WorkspaceCapabilityProperties.Capability(true, "https://files.weave.local", null),
                         null,
                         null));
 
@@ -53,7 +53,7 @@ class WorkspaceCapabilityServiceTest {
                 new WorkspaceCapabilityProperties(
                         new WorkspaceCapabilityProperties.Capability(true, null, null),
                         new WorkspaceCapabilityProperties.Capability(true, "https://matrix.weave.local", WorkspaceCapabilityReadiness.DEGRADED),
-                        new WorkspaceCapabilityProperties.Capability(true, "https://nextcloud.weave.local", WorkspaceCapabilityReadiness.BLOCKED),
+                        new WorkspaceCapabilityProperties.Capability(true, "https://files.weave.local", WorkspaceCapabilityReadiness.BLOCKED),
                         new WorkspaceCapabilityProperties.Capability(true, null, WorkspaceCapabilityReadiness.READY),
                         new WorkspaceCapabilityProperties.Capability(false, null, WorkspaceCapabilityReadiness.READY)));
 
@@ -73,7 +73,7 @@ class WorkspaceCapabilityServiceTest {
                 new WorkspaceCapabilityProperties(
                         new WorkspaceCapabilityProperties.Capability(false, null, null),
                         new WorkspaceCapabilityProperties.Capability(true, "https://matrix.weave.local", null),
-                        new WorkspaceCapabilityProperties.Capability(true, "https://nextcloud.weave.local", null),
+                        new WorkspaceCapabilityProperties.Capability(true, "https://files.weave.local", null),
                         null,
                         null));
 
