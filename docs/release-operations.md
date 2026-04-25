@@ -56,7 +56,7 @@ Use `401` for missing or invalid tokens. Use `403` when the token is authenticat
 
 - `GET /api/health/ready` should return `200 OK`
 - `GET /v3/api-docs` should return the published OpenAPI document
-- `GET /api/platform/config` should return public product URLs and module flags
+- `GET /api/platform/config` should return public product URLs, `matrixHomeserverUrl`, canonical `nextcloudBaseUrl`, and module flags; legacy `matrixBaseUrl`/`nextcloudRawBaseUrl` remain compatibility aliases
 - `GET /api/platform/status` should return module status for smoke and diagnostics
 - `GET /api/me` with a valid first-party token should return caller claims
 - `GET /api/v1/workspace/capabilities` with a valid first-party token should return the client-facing capability snapshot

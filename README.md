@@ -14,7 +14,7 @@ The backend should act as a product API and orchestration layer, not as a blind 
 This repository now starts as a JWT-protected Spring Boot API with:
 
 - `/api/health/live` and `/api/health/ready` endpoints for gateway and smoke checks
-- `/api/platform/config` and `/api/platform/status` endpoints for client bootstrap and diagnostics
+- `/api/platform/config` and `/api/platform/status` endpoints for client bootstrap and diagnostics, including canonical `matrixHomeserverUrl` and `nextcloudBaseUrl` fields
 - a canonical `/api/me` endpoint for profile claim inspection and client/backend contract testing
 - a compatibility `/api/v1/me` endpoint retained during the transition
 - a `/api/v1/workspace/capabilities` endpoint for the first backend-owned client contract

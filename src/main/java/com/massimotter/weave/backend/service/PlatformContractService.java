@@ -29,8 +29,10 @@ public class PlatformContractService {
                 platformProperties.apiBaseUrl(),
                 platformProperties.authBaseUrl(),
                 platformProperties.matrixBaseUrl(),
+                platformProperties.matrixBaseUrl(),
                 platformProperties.filesProductUrl(),
                 platformProperties.calendarProductUrl(),
+                platformProperties.nextcloudRawBaseUrl(),
                 platformProperties.nextcloudRawBaseUrl(),
                 new PlatformConfigResponse.Targets(
                         platformProperties.targets().mobile(),
