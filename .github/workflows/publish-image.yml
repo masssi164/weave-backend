@@ -75,3 +75,5 @@ jobs:
     uses: masssi164/weave/.github/workflows/live-stack-e2e.yml@main
     with:
       weave_backend_image: ${{ needs.publish.outputs.image_ref }}
+    secrets:
+      WEAVE_TEST_PASSWORD: ${{ secrets.WEAVE_TEST_PASSWORD }}
