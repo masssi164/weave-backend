@@ -34,7 +34,7 @@ weave:
     matrix-base-url: ${WEAVE_MATRIX_BASE_URL:${WEAVE_MATRIX_HOMESERVER_URL:https://matrix.weave.local}}
     files-product-url: ${WEAVE_FILES_PRODUCT_URL:https://weave.local/files}
     calendar-product-url: ${WEAVE_CALENDAR_PRODUCT_URL:https://weave.local/calendar}
-    nextcloud-raw-base-url: ${WEAVE_NEXTCLOUD_RAW_BASE_URL:${WEAVE_NEXTCLOUD_BASE_URL:https://files.weave.local}}
+    nextcloud-raw-base-url: ${WEAVE_NEXTCLOUD_BASE_URL:${WEAVE_NEXTCLOUD_RAW_BASE_URL:https://files.weave.local}}
     targets:
       mobile: ${WEAVE_TARGET_MOBILE:true}
       desktop: ${WEAVE_TARGET_DESKTOP:true}

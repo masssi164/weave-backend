@@ -19,7 +19,7 @@ Optional:
 - `WEAVE_MATRIX_BASE_URL`: public Matrix base URL, defaults to `https://matrix.weave.local`
 - `WEAVE_FILES_PRODUCT_URL`: public files product surface, defaults to `https://weave.local/files`
 - `WEAVE_CALENDAR_PRODUCT_URL`: public calendar product surface, defaults to `https://weave.local/calendar`
-- `WEAVE_NEXTCLOUD_RAW_BASE_URL`: canonical Nextcloud URL, defaults to `https://files.weave.local`
+- `WEAVE_NEXTCLOUD_BASE_URL`: canonical Nextcloud URL, defaults to `https://files.weave.local` (`WEAVE_NEXTCLOUD_RAW_BASE_URL` remains a compatibility alias)
 - `PORT`: HTTP listen port, defaults to `8080`
 
 ## Protected API behavior
