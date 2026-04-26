@@ -2,10 +2,11 @@
 
 `weave-backend` is the Spring Boot backend for the Weave product family.
 
-The backend should act as a product API and orchestration layer, not as a blind proxy for every end-user call to Matrix, Nextcloud, or Keycloak. The Flutter client already has native-first flows for OIDC sign-in, Matrix OAuth, and Nextcloud login/app-password handling. This repository should own the server-side workflows that actually benefit from a backend:
+The backend should act as a product API and orchestration layer, not as a blind proxy for every end-user call to Matrix, Nextcloud, or Keycloak. Flutter may own native OIDC/PKCE sign-in and Matrix client protocol flows, but MVP product Files and Calendar flows go through this backend at the canonical `/api` surface instead of direct Flutter-to-Nextcloud WebDAV/OCS/CalDAV calls. This repository should own the server-side workflows that actually benefit from a backend:
 
 - validating access tokens from Weave clients
-- exposing product-specific REST APIs
+- exposing product-specific REST APIs and normalized errors
+- exposing Files and Calendar facade contracts before downstream Nextcloud adapter wiring is complete
 - orchestrating server-owned workflows across Keycloak, Matrix, and Nextcloud
 - running automation, provisioning, and background jobs
 
@@ -18,6 +19,8 @@ This repository now starts as a JWT-protected Spring Boot API with:
 - a canonical `/api/me` endpoint for profile claim inspection and client/backend contract testing
 - a `/api/v1/workspace/capabilities` endpoint for the first backend-owned client contract
 - a `/api/v1/workspace/release-readiness` endpoint for operator-facing Release 1 setup status and remaining actions
+- authenticated Files facade endpoints at `/api/files`, `/api/files/upload`, `/api/files/folders`, and `/api/files/{id}/download`
+- authenticated Calendar facade endpoints at `/api/calendar/events` and `/api/calendar/events/{id}`
 - OpenAPI JSON published at `/v3/api-docs`
 - actuator health and info endpoints
 - first-party JWT issuer, audience, client, and workspace-scope validation
@@ -30,7 +33,7 @@ The backend should not, by default:
 
 - replace Matrix Native OAuth 2.0 with a custom server-side login proxy
 - assume a mobile OIDC bearer token can be reused as a Matrix access token
-- assume a Nextcloud bearer token replaces Nextcloud Login Flow v2 or app passwords for all user workflows
+- make direct Flutter-to-Nextcloud WebDAV/OCS/CalDAV calls the default MVP Files or Calendar product contract
 
 ## Configuration
 
