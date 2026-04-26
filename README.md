@@ -23,7 +23,7 @@ This repository now starts as a JWT-protected Spring Boot API with:
 - actuator health and info endpoints
 - first-party JWT issuer, audience, client, and workspace-scope validation
 - Gradle wrapper and GitHub Actions CI
-- issue-ready alignment drafts for `weave`, `weave-inf`, and `weave-backend`
+- issue-ready alignment drafts for `weave`, `weave-infra`, and `weave-backend`
 
 ## Non-goals
 
@@ -37,7 +37,7 @@ The backend should not, by default:
 
 Required runtime variables:
 
-- `WEAVE_OIDC_ISSUER_URI`: public issuer URI for the Keycloak realm used by Weave
+- `WEAVE_OIDC_ISSUER_URI`: public issuer URI for the Keycloak realm used by Weave; canonical local/dev value is `https://auth.weave.local/realms/weave`
 
 Optional runtime variables:
 
@@ -56,7 +56,7 @@ Optional runtime variables:
 - `WEAVE_WORKSPACE_BOARDS_ENABLED`: enable the boards capability, defaults to `false`
 - `WEAVE_WORKSPACE_BOARDS_READINESS`: optional explicit boards readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
 - `WEAVE_PUBLIC_BASE_URL`: public product entrypoint, defaults to `https://weave.local`
-- `WEAVE_API_BASE_URL`: public backend API base URL, defaults to `https://weave.local/api`
+- `WEAVE_API_BASE_URL`: public backend API base URL, defaults to `https://api.weave.local/api`
 - `WEAVE_AUTH_BASE_URL`: public Keycloak base URL, defaults to `https://auth.weave.local`
 - `WEAVE_MATRIX_HOMESERVER_URL`: public Matrix homeserver URL, defaults to `https://matrix.weave.local` (`WEAVE_MATRIX_BASE_URL` remains a compatibility alias)
 - `WEAVE_FILES_PRODUCT_URL`: public files product surface, defaults to `https://weave.local/files`
@@ -72,6 +72,15 @@ Workspace capability source of truth:
 - `calendar` and `boards` stay contract-stable. They are `unavailable` when disabled, and can intentionally advertise another readiness via their explicit override variables when the workspace wants to surface rollout state.
 
 See [docs/release-operations.md](docs/release-operations.md) for the Release 1 runtime contract, stable error envelope, and minimum operator checks.
+
+Canonical local/dev public contract:
+
+- Backend API base: `https://api.weave.local/api`.
+- Keycloak issuer: `https://auth.weave.local/realms/weave`.
+- Product shell: `https://weave.local`; `https://weave.local/api` is compatibility-only if infra explicitly routes it.
+- Matrix homeserver: `https://matrix.weave.local`.
+- Weave files/calendar product surfaces: `https://weave.local/files` and `https://weave.local/calendar`.
+- Canonical Nextcloud origin: `https://files.weave.local`.
 
 Local first-party token contract:
 

@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(properties = {
-        "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://auth.example.invalid/realms/weave",
+        "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://auth.weave.local/realms/weave",
         "weave.security.required-audience=weave-app",
         "weave.security.client-id=weave-app"
 })
@@ -173,7 +173,7 @@ class FirstPartyIdentityContractTest {
         Instant now = Instant.parse("2026-04-18T12:00:00Z");
         Jwt.Builder builder = Jwt.withTokenValue(tokenValue)
                 .header("alg", "none")
-                .issuer("https://auth.example.invalid/realms/weave")
+                .issuer("https://auth.weave.local/realms/weave")
                 .subject("user-123")
                 .issuedAt(now)
                 .expiresAt(now.plusSeconds(300))

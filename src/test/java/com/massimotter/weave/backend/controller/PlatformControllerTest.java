@@ -61,7 +61,7 @@ class PlatformControllerTest {
         mockMvc.perform(get("/api/platform/config"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.publicBaseUrl").value("https://weave.local"))
-                .andExpect(jsonPath("$.apiBaseUrl").value("https://weave.local/api"))
+                .andExpect(jsonPath("$.apiBaseUrl").value("https://api.weave.local/api"))
                 .andExpect(jsonPath("$.authBaseUrl").value("https://auth.weave.local"))
                 .andExpect(jsonPath("$.matrixHomeserverUrl").value("https://matrix.weave.local"))
                 .andExpect(jsonPath("$.matrixBaseUrl").value("https://matrix.weave.local"))

@@ -10,7 +10,7 @@ spring:
         jwt:
           # Required for a ready auth contract. Leave blank to start in blocked mode until
           # the backend can validate JWT iss, exp, nbf, and signature against the public issuer.
-          # Example: https://auth.example.com/realms/weave
+          # Canonical local/dev issuer: https://auth.weave.local/realms/weave
           issuer-uri: ${WEAVE_OIDC_ISSUER_URI:}
           # Optional. Use when the backend must fetch signing keys through an internal/private route
           # while preserving the public issuer URI in token validation.
@@ -29,7 +29,7 @@ management:
 weave:
   platform:
     public-base-url: ${WEAVE_PUBLIC_BASE_URL:https://weave.local}
-    api-base-url: ${WEAVE_API_BASE_URL:https://weave.local/api}
+    api-base-url: ${WEAVE_API_BASE_URL:https://api.weave.local/api}
     auth-base-url: ${WEAVE_AUTH_BASE_URL:https://auth.weave.local}
     matrix-base-url: ${WEAVE_MATRIX_HOMESERVER_URL:${WEAVE_MATRIX_BASE_URL:https://matrix.weave.local}}
     files-product-url: ${WEAVE_FILES_PRODUCT_URL:https://weave.local/files}

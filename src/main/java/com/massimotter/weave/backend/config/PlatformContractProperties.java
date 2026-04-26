@@ -15,7 +15,7 @@ public record PlatformContractProperties(
 
     public PlatformContractProperties {
         publicBaseUrl = defaultIfBlank(publicBaseUrl, "https://weave.local");
-        apiBaseUrl = defaultIfBlank(apiBaseUrl, "https://weave.local/api");
+        apiBaseUrl = defaultIfBlank(apiBaseUrl, "https://api.weave.local/api");
         authBaseUrl = defaultIfBlank(authBaseUrl, "https://auth.weave.local");
         matrixBaseUrl = defaultIfBlank(matrixBaseUrl, "https://matrix.weave.local");
         filesProductUrl = defaultIfBlank(filesProductUrl, "https://weave.local/files");
