@@ -8,11 +8,9 @@ public record PlatformConfigResponse(
         String apiBaseUrl,
         String authBaseUrl,
         String matrixHomeserverUrl,
-        String matrixBaseUrl,
         String filesProductUrl,
         String calendarProductUrl,
         String nextcloudBaseUrl,
-        String nextcloudRawBaseUrl,
         Targets targets,
         Features features) {
 

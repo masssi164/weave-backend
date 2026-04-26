@@ -23,7 +23,7 @@ class MissingIssuerRuntimeContractTest {
         mockMvc.perform(get("/actuator/health"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/v1/me")
+        mockMvc.perform(get("/api/me")
                 .header(AUTHORIZATION, "Bearer invalid-without-issuer"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("unauthorized"))

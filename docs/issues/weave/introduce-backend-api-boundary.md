@@ -16,4 +16,4 @@ The backend is meant to slim the Flutter app, but the app currently has no expli
 - `weave` has a clear backend integration package with typed request/response models
 - access tokens from the app can be attached to backend API calls without coupling UI code to HTTP details
 - direct Matrix and Nextcloud user-session flows remain in their current client-owned boundaries
-- the first backend endpoint consumed by Flutter is a simple contract endpoint such as `/api/v1/me` or workspace capabilities
+- the first backend endpoint consumed by Flutter is a simple contract endpoint such as `/api/me` or workspace capabilities

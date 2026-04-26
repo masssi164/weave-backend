@@ -13,7 +13,7 @@ class WorkspaceReleaseReadinessServiceTest {
     @Test
     void returnsReadyWhenAuthChatAndFilesAreConfigured() {
         WorkspaceCapabilityService capabilityService = new WorkspaceCapabilityService(
-                resourceServerProperties("https://auth.example.invalid/realms/weave"),
+                resourceServerProperties("https://auth.weave.local/realms/weave"),
                 new WeaveSecurityProperties("weave-app", "weave-app"),
                 new WorkspaceCapabilityProperties(
                         new WorkspaceCapabilityProperties.Capability(true, null, null),
@@ -23,7 +23,7 @@ class WorkspaceReleaseReadinessServiceTest {
                         null));
 
         WorkspaceReleaseReadinessService service = new WorkspaceReleaseReadinessService(
-                resourceServerProperties("https://auth.example.invalid/realms/weave"),
+                resourceServerProperties("https://auth.weave.local/realms/weave"),
                 new WeaveSecurityProperties("weave-app", "weave-app"),
                 new WorkspaceCapabilityProperties(
                         new WorkspaceCapabilityProperties.Capability(true, null, null),
@@ -76,11 +76,11 @@ class WorkspaceReleaseReadinessServiceTest {
                 null,
                 null);
         WorkspaceCapabilityService capabilityService = new WorkspaceCapabilityService(
-                resourceServerProperties("https://auth.example.invalid/realms/weave"),
+                resourceServerProperties("https://auth.weave.local/realms/weave"),
                 new WeaveSecurityProperties("weave-app", "weave-app"),
                 properties);
         WorkspaceReleaseReadinessService service = new WorkspaceReleaseReadinessService(
-                resourceServerProperties("https://auth.example.invalid/realms/weave"),
+                resourceServerProperties("https://auth.weave.local/realms/weave"),
                 new WeaveSecurityProperties("weave-app", "weave-app"),
                 properties,
                 capabilityService);

@@ -20,7 +20,7 @@ Own server-side product APIs and orchestration:
 - run server-owned workflows and background jobs
 - handle provisioning, automation, and cross-system tasks that should not live in Flutter
 
-### `weave-inf`
+### `weave-infra`
 
 Own the runnable environment and integration contract:
 
@@ -31,11 +31,11 @@ Own the runnable environment and integration contract:
 
 ## Gaps found in the current state
 
-1. `weave` uses `com.massimotter.weave:/oauthredirect` and `com.massimotter.weave:/logout`, while `weave-inf` currently registers `weaveapp://login/callback` for the `weave-app` Keycloak client.
-2. Older client defaults derived `nextcloud.<base-domain>` and `api.<base-domain>` instead of the final `files.<base-domain>` canonical Nextcloud URL and `<base-domain>/api` product API route.
-3. Older local infrastructure exposed service-specific localhost routes instead of the final `https://weave.local` gateway plus `https://auth.weave.local`, `https://matrix.weave.local`, and `https://files.weave.local`.
+1. `weave` uses `com.massimotter.weave:/oauthredirect` and `com.massimotter.weave:/logout`, while older `weave-infra` revisions registered `weaveapp://login/callback` for the `weave-app` Keycloak client.
+2. Older client defaults derived stale service routes instead of the final `files.<base-domain>` canonical Nextcloud URL and `api.<base-domain>/api` backend API base route.
+3. Older local infrastructure exposed service-specific localhost routes instead of the final `https://weave.local` product gateway plus `https://api.weave.local/api`, `https://auth.weave.local`, `https://matrix.weave.local`, and `https://files.weave.local` service origins.
 4. The original `weave-backend` spike assumed that user bearer tokens could be forwarded directly into Nextcloud and Matrix calls. That is the wrong default boundary for this stack.
-5. The original backend spike did not compile in a clean Gradle/JDK environment because it used `WebClient` types without the needed reactive dependency and mixed incompatible OAuth client wiring.
+5. The original backend spike did not compile in a clean Gradle/JDK environment because it used `WebClient` types without the needed reactive dependency and mixed mismatched OAuth client wiring.
 
 ## Why the backend boundary should stay narrow
 
@@ -70,5 +70,5 @@ The safest first shape is therefore:
 Issue-ready drafts live under:
 
 - [docs/issues/weave](/Users/flotterotter/code/weave-backend/docs/issues/weave)
-- [docs/issues/weave-inf](/Users/flotterotter/code/weave-backend/docs/issues/weave-inf)
+- [docs/issues/weave-infra](docs/issues/weave-inf)
 - [docs/issues/weave-backend](/Users/flotterotter/code/weave-backend/docs/issues/weave-backend)

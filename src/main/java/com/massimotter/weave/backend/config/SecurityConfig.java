@@ -48,7 +48,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/health/**", "/api/platform/config", "/api/platform/status").permitAll()
                         .requestMatchers("/v3/api-docs", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/**").hasAuthority(WORKSPACE_SCOPE_AUTHORITY)
-                        .requestMatchers("/api/v1/**").hasAuthority(WORKSPACE_SCOPE_AUTHORITY)
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .authenticationEntryPoint(authenticationEntryPoint)

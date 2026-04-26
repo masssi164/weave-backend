@@ -13,7 +13,7 @@ class WorkspaceCapabilityServiceTest {
     @Test
     void marksChatAndFilesDegradedUntilTheirRoutesAreConfigured() {
         WorkspaceCapabilityService service = new WorkspaceCapabilityService(
-                resourceServerProperties("https://auth.example.invalid/realms/weave"),
+                resourceServerProperties("https://auth.weave.local/realms/weave"),
                 new WeaveSecurityProperties("weave-app", "weave-app"),
                 new WorkspaceCapabilityProperties(null, null, null, null, null));
 
@@ -48,7 +48,7 @@ class WorkspaceCapabilityServiceTest {
     @Test
     void usesConfiguredReadinessOverridesForEnabledCapabilities() {
         WorkspaceCapabilityService service = new WorkspaceCapabilityService(
-                resourceServerProperties("https://auth.example.invalid/realms/weave"),
+                resourceServerProperties("https://auth.weave.local/realms/weave"),
                 new WeaveSecurityProperties("weave-app", "weave-app"),
                 new WorkspaceCapabilityProperties(
                         new WorkspaceCapabilityProperties.Capability(true, null, null),
@@ -68,7 +68,7 @@ class WorkspaceCapabilityServiceTest {
     @Test
     void marksShellAccessUnavailableWhenTheCapabilityIsDisabled() {
         WorkspaceCapabilityService service = new WorkspaceCapabilityService(
-                resourceServerProperties("https://auth.example.invalid/realms/weave"),
+                resourceServerProperties("https://auth.weave.local/realms/weave"),
                 new WeaveSecurityProperties("weave-app", "weave-app"),
                 new WorkspaceCapabilityProperties(
                         new WorkspaceCapabilityProperties.Capability(false, null, null),

@@ -14,7 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(properties = {
-        "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://auth.example.invalid/realms/weave"
+        "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://auth.weave.local/realms/weave"
 })
 @AutoConfigureMockMvc
 class OpenApiDocumentationTest {
@@ -36,7 +36,6 @@ class OpenApiDocumentationTest {
                 .andExpect(jsonPath("$.paths['/api/health/ready']").exists())
                 .andExpect(jsonPath("$.paths['/api/platform/config']").exists())
                 .andExpect(jsonPath("$.paths['/api/platform/status']").exists())
-                .andExpect(jsonPath("$.paths['/api/v1/me']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/workspace/capabilities']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/workspace/release-readiness']").exists())
                 .andExpect(jsonPath("$.components.schemas.ApiErrorResponse.properties.code.type").value("string"))
