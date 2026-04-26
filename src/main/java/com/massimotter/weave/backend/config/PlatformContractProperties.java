@@ -7,20 +7,20 @@ public record PlatformContractProperties(
         String publicBaseUrl,
         String apiBaseUrl,
         String authBaseUrl,
-        String matrixBaseUrl,
+        String matrixHomeserverUrl,
         String filesProductUrl,
         String calendarProductUrl,
-        String nextcloudRawBaseUrl,
+        String nextcloudBaseUrl,
         Targets targets) {
 
     public PlatformContractProperties {
         publicBaseUrl = defaultIfBlank(publicBaseUrl, "https://weave.local");
         apiBaseUrl = defaultIfBlank(apiBaseUrl, "https://api.weave.local/api");
         authBaseUrl = defaultIfBlank(authBaseUrl, "https://auth.weave.local");
-        matrixBaseUrl = defaultIfBlank(matrixBaseUrl, "https://matrix.weave.local");
+        matrixHomeserverUrl = defaultIfBlank(matrixHomeserverUrl, "https://matrix.weave.local");
         filesProductUrl = defaultIfBlank(filesProductUrl, "https://weave.local/files");
         calendarProductUrl = defaultIfBlank(calendarProductUrl, "https://weave.local/calendar");
-        nextcloudRawBaseUrl = defaultIfBlank(nextcloudRawBaseUrl, "https://files.weave.local");
+        nextcloudBaseUrl = defaultIfBlank(nextcloudBaseUrl, "https://files.weave.local");
         targets = targets == null ? new Targets(true, true, false) : targets;
     }
 

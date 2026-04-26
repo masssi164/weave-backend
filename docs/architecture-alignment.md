@@ -35,7 +35,7 @@ Own the runnable environment and integration contract:
 2. Older client defaults derived stale service routes instead of the final `files.<base-domain>` canonical Nextcloud URL and `api.<base-domain>/api` backend API base route.
 3. Older local infrastructure exposed service-specific localhost routes instead of the final `https://weave.local` product gateway plus `https://api.weave.local/api`, `https://auth.weave.local`, `https://matrix.weave.local`, and `https://files.weave.local` service origins.
 4. The original `weave-backend` spike assumed that user bearer tokens could be forwarded directly into Nextcloud and Matrix calls. That is the wrong default boundary for this stack.
-5. The original backend spike did not compile in a clean Gradle/JDK environment because it used `WebClient` types without the needed reactive dependency and mixed incompatible OAuth client wiring.
+5. The original backend spike did not compile in a clean Gradle/JDK environment because it used `WebClient` types without the needed reactive dependency and mixed mismatched OAuth client wiring.
 
 ## Why the backend boundary should stay narrow
 

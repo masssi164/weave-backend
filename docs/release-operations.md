@@ -16,15 +16,15 @@ Optional:
 - `WEAVE_PUBLIC_BASE_URL`: public product entrypoint, defaults to `https://weave.local`
 - `WEAVE_API_BASE_URL`: public backend API base URL, defaults to `https://api.weave.local/api`
 - `WEAVE_AUTH_BASE_URL`: public Keycloak base URL, defaults to `https://auth.weave.local`
-- `WEAVE_MATRIX_HOMESERVER_URL`: public Matrix homeserver URL, defaults to `https://matrix.weave.local` (`WEAVE_MATRIX_BASE_URL` remains a compatibility alias)
+- `WEAVE_MATRIX_HOMESERVER_URL`: public Matrix homeserver URL, defaults to `https://matrix.weave.local`
 - `WEAVE_FILES_PRODUCT_URL`: public files product surface, defaults to `https://weave.local/files`
 - `WEAVE_CALENDAR_PRODUCT_URL`: public calendar product surface, defaults to `https://weave.local/calendar`
-- `WEAVE_NEXTCLOUD_BASE_URL`: canonical Nextcloud URL, defaults to `https://files.weave.local` (`WEAVE_NEXTCLOUD_RAW_BASE_URL` remains a compatibility alias)
+- `WEAVE_NEXTCLOUD_BASE_URL`: canonical Nextcloud URL, defaults to `https://files.weave.local`
 - `PORT`: HTTP listen port, defaults to `8080`
 
 ## Local/dev public contract
 
-The backend's canonical local/dev API base is `https://api.weave.local/api`. The product shell remains `https://weave.local`; `https://weave.local/api` is compatibility-only when `weave-infra` explicitly routes it and must behave identically to the canonical API base.
+The backend's canonical local/dev API base is `https://api.weave.local/api`. The product shell remains `https://weave.local`.
 
 The canonical local/dev Keycloak issuer is `https://auth.weave.local/realms/weave`. Keep any private JWKS route in `WEAVE_OIDC_JWK_SET_URI`; do not replace token issuer validation with an internal service URL.
 
@@ -62,7 +62,7 @@ Use `401` for missing or invalid tokens. Use `403` when the token is authenticat
 
 - `GET /api/health/ready` should return `200 OK`
 - `GET /v3/api-docs` should return the published OpenAPI document
-- `GET /api/platform/config` should return public product URLs, `matrixHomeserverUrl`, canonical `nextcloudBaseUrl`, and module flags; legacy `matrixBaseUrl`/`nextcloudRawBaseUrl` remain compatibility aliases
+- `GET /api/platform/config` should return public product URLs, `matrixHomeserverUrl`, canonical `nextcloudBaseUrl`, and module flags
 - `GET /api/platform/status` should return module status for smoke and diagnostics
 - `GET /api/me` with a valid first-party token should return caller claims
 - `GET /api/v1/workspace/capabilities` with a valid first-party token should return the client-facing capability snapshot

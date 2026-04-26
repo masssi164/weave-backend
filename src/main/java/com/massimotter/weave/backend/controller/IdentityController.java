@@ -26,7 +26,7 @@ public class IdentityController {
 
     private static final List<String> MVP_ROLES = List.of("owner", "admin", "member", "guest");
 
-    @GetMapping({"/api/me", "/api/v1/me"})
+    @GetMapping("/api/me")
     @Operation(
             summary = "Get the authenticated caller profile",
             description = "Returns the canonical Weave identity and profile snapshot available to the backend.",
@@ -58,9 +58,6 @@ public class IdentityController {
                 firstText(jwt.getClaimAsString("timezone"), "UTC"),
                 productRoles(realmRoles),
                 groups,
-                subject,
-                username,
-                displayName,
                 issuedFor(jwt),
                 jwt.getAudience(),
                 realmRoles,

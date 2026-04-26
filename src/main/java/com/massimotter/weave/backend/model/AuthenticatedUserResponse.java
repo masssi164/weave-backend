@@ -23,12 +23,6 @@ public record AuthenticatedUserResponse(
         List<String> roles,
         @Schema(description = "Workspace or module groups.")
         List<String> groups,
-        @Schema(description = "Legacy Keycloak subject alias retained during /api/v1 transition.")
-        String sub,
-        @Schema(description = "Legacy preferred username alias retained during /api/v1 transition.")
-        String preferredUsername,
-        @Schema(description = "Legacy display name alias retained during /api/v1 transition.")
-        String name,
         @Schema(description = "Authorized party/client that requested the token.")
         String issuedFor,
         @Schema(description = "Token audience values.")

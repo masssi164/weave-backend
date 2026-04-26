@@ -38,7 +38,7 @@ class IdentityControllerTest {
 
     @Test
     void returnsAuthenticatedPrincipalDetails() throws Exception {
-        mockMvc.perform(get("/api/v1/me").with(jwt().jwt(jwt -> jwt
+        mockMvc.perform(get("/api/me").with(jwt().jwt(jwt -> jwt
                         .subject("user-123")
                         .claim("preferred_username", "alice")
                         .claim("name", "Alice Example")
@@ -59,8 +59,6 @@ class IdentityControllerTest {
                 .andExpect(jsonPath("$.timezone").value("Europe/Berlin"))
                 .andExpect(jsonPath("$.roles[0]").value("admin"))
                 .andExpect(jsonPath("$.moduleSyncStatus.matrix").value("not_configured"))
-                .andExpect(jsonPath("$.sub").value("user-123"))
-                .andExpect(jsonPath("$.preferredUsername").value("alice"))
                 .andExpect(jsonPath("$.issuedFor").value("weave-app"))
                 .andExpect(jsonPath("$.audience[0]").value("weave-app"))
                 .andExpect(jsonPath("$.realmRoles[0]").value("admin"))
@@ -85,13 +83,13 @@ class IdentityControllerTest {
 
     @Test
     void rejectsAnonymousRequests() throws Exception {
-        mockMvc.perform(get("/api/v1/me"))
+        mockMvc.perform(get("/api/me"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void fallsBackToClientIdWhenAzpIsAbsent() throws Exception {
-        mockMvc.perform(get("/api/v1/me").with(jwt().jwt(jwt -> jwt
+        mockMvc.perform(get("/api/me").with(jwt().jwt(jwt -> jwt
                         .subject("user-123")
                         .claim("client_id", "weave-app")
                         .claim("aud", List.of("weave-app")))

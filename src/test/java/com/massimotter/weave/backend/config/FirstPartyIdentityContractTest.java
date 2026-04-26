@@ -106,7 +106,7 @@ class FirstPartyIdentityContractTest {
 
     @Test
     void normalizesIssuedForFromClientIdWhenAzpIsAbsent() throws Exception {
-        mockMvc.perform(get("/api/v1/me")
+        mockMvc.perform(get("/api/me")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer client-id-only"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.issuedFor").value(FIRST_PARTY_CLIENT_ID))
@@ -115,7 +115,7 @@ class FirstPartyIdentityContractTest {
 
     @Test
     void acceptsValidFullFirstPartyToken() throws Exception {
-        mockMvc.perform(get("/api/v1/me")
+        mockMvc.perform(get("/api/me")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer valid-full-token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value("user-123"))
