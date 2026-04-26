@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -38,8 +37,8 @@ public class ApiErrorResponseWriter {
         response.setStatus(status.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
-        String requestId = requestId(request);
-        response.setHeader("X-Request-Id", requestId);
+        String requestId = RequestIdFilter.requestId(request);
+        response.setHeader(RequestIdFilter.HEADER, requestId);
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("status", status.value());
         details.put("path", request.getRequestURI());
@@ -58,11 +57,4 @@ public class ApiErrorResponseWriter {
         return status.name().toLowerCase().replace('_', '-');
     }
 
-    private String requestId(HttpServletRequest request) {
-        String incoming = request.getHeader("X-Request-Id");
-        if (incoming != null && !incoming.isBlank()) {
-            return incoming.trim();
-        }
-        return UUID.randomUUID().toString();
-    }
 }

@@ -77,6 +77,7 @@ weave:
       readiness: ${WEAVE_WORKSPACE_FILES_READINESS:}
     calendar:
       enabled: ${WEAVE_WORKSPACE_CALENDAR_ENABLED:false}
+      dependency-url: ${WEAVE_CALDAV_BASE_URL:${WEAVE_NEXTCLOUD_BASE_URL:https://files.weave.local}}
       readiness: ${WEAVE_WORKSPACE_CALENDAR_READINESS:}
     boards:
       enabled: ${WEAVE_WORKSPACE_BOARDS_ENABLED:false}
