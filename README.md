@@ -55,6 +55,12 @@ Optional runtime variables:
 - `WEAVE_WORKSPACE_FILES_READINESS`: optional explicit files readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
 - `WEAVE_WORKSPACE_CALENDAR_ENABLED`: enable the calendar capability, defaults to `false`
 - `WEAVE_WORKSPACE_CALENDAR_READINESS`: optional explicit calendar readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
+- `WEAVE_CALDAV_BASE_URL`: Nextcloud origin used only by the backend CalDAV adapter, defaults to `WEAVE_NEXTCLOUD_BASE_URL` / `https://files.weave.local`
+- `WEAVE_CALDAV_CALENDAR_PATH_TEMPLATE`: CalDAV calendar collection template, defaults to `/remote.php/dav/calendars/{user}/personal/`; `{user}` is derived from the authenticated Weave token `preferred_username` claim, falling back to `sub`
+- `WEAVE_CALDAV_AUTH_MODE`: backend actor credential mode (`BASIC` or `BEARER`), defaults to `BASIC`
+- `WEAVE_CALDAV_BACKEND_USERNAME`: backend actor username for Basic auth; required with `BASIC`
+- `WEAVE_CALDAV_BACKEND_TOKEN`: backend actor app password/token or bearer token; required for the CalDAV adapter to call Nextcloud
+- `WEAVE_CALDAV_REQUEST_TIMEOUT_SECONDS`: CalDAV request timeout, defaults to `10`
 - `WEAVE_WORKSPACE_BOARDS_ENABLED`: enable the boards capability, defaults to `false`
 - `WEAVE_WORKSPACE_BOARDS_READINESS`: optional explicit boards readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
 - `WEAVE_PUBLIC_BASE_URL`: public product entrypoint, defaults to `https://weave.local`
@@ -85,6 +91,12 @@ Workspace capability source of truth:
 - `chat` is configuration-backed. When enabled it follows `WEAVE_WORKSPACE_CHAT_READINESS` if set, otherwise it is `ready` when `WEAVE_MATRIX_HOMESERVER_URL` is configured, `degraded` without that route, and `blocked` if the shell contract itself is blocked.
 - `files` is configuration-backed. When enabled it follows `WEAVE_WORKSPACE_FILES_READINESS` if set, otherwise it is `ready` when `WEAVE_NEXTCLOUD_BASE_URL` is configured, `degraded` without that route, and `blocked` if the shell contract itself is blocked.
 - `calendar` and `boards` stay contract-stable. They are `unavailable` when disabled, and can intentionally advertise another readiness via their explicit override variables when the workspace wants to surface rollout state.
+
+Calendar facade adapter scope:
+
+- `/api/calendar/events` remains the product API. The backend maps list/create/update/delete operations to Nextcloud CalDAV and normalizes CalDAV failures into Weave error codes.
+- The MVP adapter requires an explicitly configured backend actor credential. If `WEAVE_CALDAV_BACKEND_TOKEN` or the Basic username is missing, calendar operations fail closed with `nextcloud-adapter-not-configured` instead of leaking raw CalDAV behavior to clients.
+- Recurrence creation/editing/expansion is intentionally deferred: the current DTO has no RRULE contract, and the adapter does not expose raw recurrence fields. Recurring events returned by CalDAV may appear as their source VEVENT only; full recurrence UX and expansion need a later product/API spec.
 
 See [docs/release-operations.md](docs/release-operations.md) for the Release 1 runtime contract, stable error envelope, and minimum operator checks.
 
