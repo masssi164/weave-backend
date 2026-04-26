@@ -29,6 +29,12 @@ public class ApiErrorResponseWriter {
     public void write(HttpServletRequest request, HttpServletResponse response, HttpStatus status, String code,
             String message)
             throws IOException {
+        write(request, response, status, code, message, Map.of());
+    }
+
+    public void write(HttpServletRequest request, HttpServletResponse response, HttpStatus status, String code,
+            String message, Map<String, Object> additionalDetails)
+            throws IOException {
         response.setStatus(status.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
@@ -38,6 +44,9 @@ public class ApiErrorResponseWriter {
         details.put("status", status.value());
         details.put("path", request.getRequestURI());
         details.put("error", status.getReasonPhrase());
+        if (additionalDetails != null) {
+            details.putAll(additionalDetails);
+        }
         objectMapper.writeValue(response.getWriter(), new ApiErrorResponse(
                 code,
                 message,
