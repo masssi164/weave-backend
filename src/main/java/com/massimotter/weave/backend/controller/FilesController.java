@@ -6,6 +6,7 @@ import com.massimotter.weave.backend.model.files.FileItemResponse;
 import com.massimotter.weave.backend.model.files.FileListResponse;
 import com.massimotter.weave.backend.model.files.FileUploadResponse;
 import com.massimotter.weave.backend.service.FilesFacadeService;
+import com.massimotter.weave.backend.service.files.DownloadedFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,6 +17,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -84,9 +87,13 @@ public class FilesController {
 
     @GetMapping("/api/files/{id}/download")
     @Operation(summary = "Download a file")
-    public ResponseEntity<Void> download(@PathVariable @Size(max = 2048) String id) {
-        filesFacadeService.prepareDownload(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<byte[]> download(@PathVariable @Size(max = 2048) String id) {
+        DownloadedFile file = filesFacadeService.download(id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(file.mimeType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(file.filename()).build().toString())
+                .body(file.content());
     }
 
     @DeleteMapping("/api/files/{id}")

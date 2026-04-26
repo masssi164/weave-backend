@@ -6,7 +6,7 @@ The backend should act as a product API and orchestration layer, not as a blind 
 
 - validating access tokens from Weave clients
 - exposing product-specific REST APIs and normalized errors
-- exposing Files and Calendar facade contracts before downstream Nextcloud adapter wiring is complete
+- exposing Files and Calendar facade contracts, with Files backed by a fail-closed Nextcloud WebDAV adapter when backend-owned actor credentials are configured
 - orchestrating server-owned workflows across Keycloak, Matrix, and Nextcloud
 - running automation, provisioning, and background jobs
 
@@ -19,7 +19,7 @@ This repository now starts as a JWT-protected Spring Boot API with:
 - a canonical `/api/me` endpoint for profile claim inspection and client/backend contract testing
 - a `/api/v1/workspace/capabilities` endpoint for the first backend-owned client contract
 - a `/api/v1/workspace/release-readiness` endpoint for operator-facing Release 1 setup status and remaining actions
-- authenticated Files facade endpoints at `/api/files`, `/api/files/upload`, `/api/files/folders`, and `/api/files/{id}/download`
+- authenticated Files facade endpoints at `/api/files`, `/api/files/upload`, `/api/files/folders`, `/api/files/{id}/download`, and `/api/files/{id}` backed by Nextcloud WebDAV when configured
 - authenticated Calendar facade endpoints at `/api/calendar/events` and `/api/calendar/events/{id}`
 - OpenAPI JSON published at `/v3/api-docs`
 - actuator health and info endpoints
@@ -51,7 +51,7 @@ Optional runtime variables:
 - `WEAVE_MATRIX_HOMESERVER_URL`: public Matrix base URL used by chat auto-readiness
 - `WEAVE_WORKSPACE_CHAT_READINESS`: optional explicit chat readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
 - `WEAVE_WORKSPACE_FILES_ENABLED`: enable files in the workspace snapshot, defaults to `true`
-- `WEAVE_NEXTCLOUD_BASE_URL`: canonical Nextcloud URL used by files auto-readiness
+- `WEAVE_NEXTCLOUD_BASE_URL`: canonical Nextcloud URL used by files auto-readiness and the backend Files adapter
 - `WEAVE_WORKSPACE_FILES_READINESS`: optional explicit files readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
 - `WEAVE_WORKSPACE_CALENDAR_ENABLED`: enable the calendar capability, defaults to `false`
 - `WEAVE_WORKSPACE_CALENDAR_READINESS`: optional explicit calendar readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
@@ -64,7 +64,20 @@ Optional runtime variables:
 - `WEAVE_FILES_PRODUCT_URL`: public files product surface, defaults to `https://weave.local/files`
 - `WEAVE_CALENDAR_PRODUCT_URL`: public calendar product surface, defaults to `https://weave.local/calendar`
 - `WEAVE_NEXTCLOUD_BASE_URL`: canonical Nextcloud URL, defaults to `https://files.weave.local`
+- `WEAVE_NEXTCLOUD_FILES_ACTOR_MODEL`: backend-to-Nextcloud token model, currently only `backend-service-account`; other values fail closed until implemented
+- `WEAVE_NEXTCLOUD_FILES_ACTOR_USERNAME`: backend-owned Nextcloud actor username for WebDAV calls; blank keeps the facade unavailable instead of forwarding caller tokens
+- `WEAVE_NEXTCLOUD_FILES_ACTOR_TOKEN`: backend-owned Nextcloud app password/token for WebDAV calls; blank keeps the facade unavailable
+- `WEAVE_NEXTCLOUD_FILES_APP_PASSWORD`: compatibility alias used when `WEAVE_NEXTCLOUD_FILES_ACTOR_TOKEN` is blank
+- `WEAVE_NEXTCLOUD_FILES_WEBDAV_ROOT_PATH`: Nextcloud WebDAV files root path, defaults to `/remote.php/dav/files`
 - `PORT`: HTTP port, defaults to `8080`
+
+Files adapter behavior:
+
+- The app never receives raw Nextcloud credentials. The backend uses the configured backend-owned actor for WebDAV calls.
+- If the actor model, username, or token is missing, files endpoints fail closed with `nextcloud-adapter-not-configured`.
+- Implemented WebDAV operations: folder listing with quota when returned by Nextcloud, folder creation, upload, download, and delete.
+- Move/share remain intentionally unsupported until product policy and endpoint contracts are specified.
+- No live Nextcloud integration is implied by unit tests; local/live validation still requires a configured `files.weave.local` and backend actor.
 
 Workspace capability source of truth:
 
