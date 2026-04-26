@@ -1,10 +1,12 @@
 package com.massimotter.weave.backend.controller;
 
+import com.massimotter.weave.backend.config.RequestIdFilter;
 import com.massimotter.weave.backend.model.PlatformConfigResponse;
 import com.massimotter.weave.backend.model.PlatformStatusResponse;
 import com.massimotter.weave.backend.service.PlatformContractService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,7 +28,7 @@ public class PlatformController {
 
     @GetMapping("/api/platform/status")
     @Operation(summary = "Get platform module status")
-    public PlatformStatusResponse status() {
-        return platformContractService.status();
+    public PlatformStatusResponse status(HttpServletRequest request) {
+        return platformContractService.status(RequestIdFilter.requestId(request));
     }
 }

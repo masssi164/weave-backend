@@ -22,6 +22,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -79,24 +80,44 @@ class PlatformControllerTest {
 
     @Test
     void exposesPublicPlatformStatus() throws Exception {
-        mockMvc.perform(get("/api/platform/status"))
+        mockMvc.perform(get("/api/platform/status")
+                        .header("X-Request-Id", "diag-test-1"))
                 .andExpect(status().isOk())
+                .andExpect(header().string("X-Request-Id", "diag-test-1"))
+                .andExpect(jsonPath("$.requestId").value("diag-test-1"))
                 .andExpect(jsonPath("$.backend.status").value("up"))
+                .andExpect(jsonPath("$.backend.readiness").value("ready"))
                 .andExpect(jsonPath("$.auth.status").value("up"))
+                .andExpect(jsonPath("$.auth.readiness").value("ready"))
                 .andExpect(jsonPath("$.matrix.status").value("up"))
+                .andExpect(jsonPath("$.matrix.readiness").value("ready"))
                 .andExpect(jsonPath("$.matrix.federationEnabled").value(false))
                 .andExpect(jsonPath("$.matrix.e2eeEnabled").value(false))
-                .andExpect(jsonPath("$.nextcloud.status").value("up"));
+                .andExpect(jsonPath("$.files.status").value("up"))
+                .andExpect(jsonPath("$.calendar.status").value("up"))
+                .andExpect(jsonPath("$.nextcloud.status").value("up"))
+                .andExpect(jsonPath("$.checks[?(@.key == 'auth')].readiness").value("ready"))
+                .andExpect(jsonPath("$.checks[?(@.key == 'calendar')].status").value("up"))
+                .andExpect(jsonPath("$.actions").isEmpty());
     }
 
     @Test
     void exposesPublicHealthEndpoints() throws Exception {
-        mockMvc.perform(get("/api/health/live"))
+        mockMvc.perform(get("/api/health/live")
+                        .header("X-Request-Id", "live-test-1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("up"));
+                .andExpect(header().string("X-Request-Id", "live-test-1"))
+                .andExpect(jsonPath("$.status").value("up"))
+                .andExpect(jsonPath("$.requestId").value("live-test-1"))
+                .andExpect(jsonPath("$.checks[0].key").value("backend"));
 
-        mockMvc.perform(get("/api/health/ready"))
+        mockMvc.perform(get("/api/health/ready")
+                        .header("X-Request-Id", "ready-test-1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("up"));
+                .andExpect(header().string("X-Request-Id", "ready-test-1"))
+                .andExpect(jsonPath("$.status").value("up"))
+                .andExpect(jsonPath("$.requestId").value("ready-test-1"))
+                .andExpect(jsonPath("$.checks[?(@.key == 'matrix')].readiness").value("ready"))
+                .andExpect(jsonPath("$.actions").isEmpty());
     }
 }

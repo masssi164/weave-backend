@@ -1,9 +1,13 @@
 package com.massimotter.weave.backend.service;
 
 import com.massimotter.weave.backend.config.PlatformContractProperties;
+import com.massimotter.weave.backend.config.WeaveSecurityProperties;
 import com.massimotter.weave.backend.config.WorkspaceCapabilityProperties;
 import com.massimotter.weave.backend.model.PlatformConfigResponse;
 import com.massimotter.weave.backend.model.PlatformStatusResponse;
+import com.massimotter.weave.backend.model.WorkspaceCapabilityReadiness;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.stereotype.Service;
 
@@ -12,14 +16,17 @@ public class PlatformContractService {
 
     private final OAuth2ResourceServerProperties resourceServerProperties;
     private final PlatformContractProperties platformProperties;
+    private final WeaveSecurityProperties securityProperties;
     private final WorkspaceCapabilityProperties workspaceProperties;
 
     public PlatformContractService(
             OAuth2ResourceServerProperties resourceServerProperties,
             PlatformContractProperties platformProperties,
+            WeaveSecurityProperties securityProperties,
             WorkspaceCapabilityProperties workspaceProperties) {
         this.resourceServerProperties = resourceServerProperties;
         this.platformProperties = platformProperties;
+        this.securityProperties = securityProperties;
         this.workspaceProperties = workspaceProperties;
     }
 
@@ -44,24 +51,207 @@ public class PlatformContractService {
                         workspaceProperties.calendar().enabled()));
     }
 
-    public PlatformStatusResponse status() {
+    public PlatformStatusResponse status(String requestId) {
+        PlatformStatusResponse.DiagnosticStatus backend = new PlatformStatusResponse.DiagnosticStatus(
+                "up",
+                "ready",
+                "The Weave backend process is serving product API diagnostics.",
+                null);
+        PlatformStatusResponse.DiagnosticStatus auth = authStatus();
+        PlatformStatusResponse.MatrixStatus matrix = matrixStatus(auth);
+        PlatformStatusResponse.DiagnosticStatus files = moduleStatus(
+                "files",
+                "Files",
+                workspaceProperties.files(),
+                auth,
+                "Set WEAVE_NEXTCLOUD_BASE_URL to the canonical Nextcloud URL, for example https://files.weave.local.",
+                "Enable WEAVE_WORKSPACE_FILES_ENABLED when files should be available.");
+        PlatformStatusResponse.DiagnosticStatus calendar = moduleStatus(
+                "calendar",
+                "Calendar",
+                workspaceProperties.calendar(),
+                auth,
+                "Set WEAVE_CALDAV_BASE_URL or WEAVE_NEXTCLOUD_BASE_URL so calendar can reach Nextcloud CalDAV.",
+                "Enable WEAVE_WORKSPACE_CALENDAR_ENABLED when calendar should be available.");
+        PlatformStatusResponse.DiagnosticStatus nextcloud = nextcloudStatus();
+
+        List<PlatformStatusResponse.DiagnosticCheck> checks = List.of(
+                check("backend", "Backend API", backend),
+                check("auth", "Keycloak auth", auth),
+                check("matrix", "Matrix chat", matrix),
+                check("files", "Files module", files),
+                check("calendar", "Calendar module", calendar),
+                check("nextcloud", "Nextcloud route", nextcloud));
+
         return new PlatformStatusResponse(
-                new PlatformStatusResponse.SimpleStatus("up"),
-                new PlatformStatusResponse.SimpleStatus(hasText(resourceServerProperties.getJwt().getIssuerUri())
-                        ? "up"
-                        : "blocked"),
-                new PlatformStatusResponse.MatrixStatus(moduleStatus(workspaceProperties.chat()), false, false),
-                new PlatformStatusResponse.SimpleStatus(moduleStatus(workspaceProperties.files())));
+                requestId,
+                backend,
+                auth,
+                matrix,
+                files,
+                calendar,
+                nextcloud,
+                checks,
+                actions(checks));
     }
 
-    private String moduleStatus(WorkspaceCapabilityProperties.Capability capability) {
+    private PlatformStatusResponse.DiagnosticStatus authStatus() {
+        if (!workspaceProperties.shellAccess().enabled()) {
+            return new PlatformStatusResponse.DiagnosticStatus(
+                    "disabled",
+                    "unavailable",
+                    "Shell access is disabled for this backend runtime.",
+                    "Enable WEAVE_WORKSPACE_SHELL_ACCESS_ENABLED when authenticated Weave product APIs should serve traffic.");
+        }
+
+        List<String> missing = new ArrayList<>();
+        if (!hasText(resourceServerProperties.getJwt().getIssuerUri())) {
+            missing.add("WEAVE_OIDC_ISSUER_URI");
+        }
+        if (!hasText(securityProperties.requiredAudience())) {
+            missing.add("WEAVE_OIDC_REQUIRED_AUDIENCE");
+        }
+        if (!hasText(securityProperties.clientId())) {
+            missing.add("WEAVE_CLIENT_ID");
+        }
+
+        if (missing.isEmpty()) {
+            return new PlatformStatusResponse.DiagnosticStatus(
+                    "up",
+                    "ready",
+                    "JWT issuer, audience, client, and workspace-scope validation are configured.",
+                    null);
+        }
+
+        return new PlatformStatusResponse.DiagnosticStatus(
+                "blocked",
+                "blocked",
+                "Missing auth runtime inputs: " + String.join(", ", missing) + ".",
+                "Provide the missing auth runtime inputs for the backend: " + String.join(", ", missing) + ".");
+    }
+
+    private PlatformStatusResponse.MatrixStatus matrixStatus(PlatformStatusResponse.DiagnosticStatus auth) {
+        PlatformStatusResponse.DiagnosticStatus status = moduleStatus(
+                "matrix",
+                "Matrix chat",
+                workspaceProperties.chat(),
+                auth,
+                "Set WEAVE_MATRIX_HOMESERVER_URL to the public Matrix base URL, for example https://matrix.weave.local.",
+                "Enable WEAVE_WORKSPACE_CHAT_ENABLED when chat should be available.");
+        return new PlatformStatusResponse.MatrixStatus(
+                status.status(),
+                status.readiness(),
+                status.message(),
+                status.action(),
+                false,
+                false);
+    }
+
+    private PlatformStatusResponse.DiagnosticStatus moduleStatus(
+            String key,
+            String label,
+            WorkspaceCapabilityProperties.Capability capability,
+            PlatformStatusResponse.DiagnosticStatus auth,
+            String missingRouteAction,
+            String disabledAction) {
         if (!capability.enabled()) {
-            return "disabled";
+            return new PlatformStatusResponse.DiagnosticStatus(
+                    "disabled",
+                    "unavailable",
+                    label + " is disabled for this workspace snapshot.",
+                    disabledAction);
+        }
+        if ("blocked".equals(auth.readiness())) {
+            return new PlatformStatusResponse.DiagnosticStatus(
+                    "blocked",
+                    "blocked",
+                    label + " depends on shell access, which is currently blocked by the auth contract.",
+                    "Fix the first-party auth contract first, then re-check " + key + " readiness.");
         }
         if (capability.readiness() != null) {
-            return capability.readiness().name().toLowerCase();
+            return overriddenStatus(label, capability.readiness());
         }
-        return hasText(capability.dependencyUrl()) ? "up" : "degraded";
+        if (hasText(capability.dependencyUrl())) {
+            return new PlatformStatusResponse.DiagnosticStatus(
+                    "up",
+                    "ready",
+                    label + " has a configured public dependency route.",
+                    null);
+        }
+        return new PlatformStatusResponse.DiagnosticStatus(
+                "degraded",
+                "degraded",
+                label + " is enabled but no dependency route is configured.",
+                missingRouteAction);
+    }
+
+    private PlatformStatusResponse.DiagnosticStatus overriddenStatus(
+            String label,
+            WorkspaceCapabilityReadiness readiness) {
+        String normalized = readiness.name().toLowerCase();
+        String status = switch (readiness) {
+            case READY -> "up";
+            case DEGRADED -> "degraded";
+            case BLOCKED -> "blocked";
+            case UNAVAILABLE -> "disabled";
+        };
+        String action = readiness == WorkspaceCapabilityReadiness.READY
+                ? null
+                : "Review the configured " + label + " readiness override and downstream service wiring.";
+        return new PlatformStatusResponse.DiagnosticStatus(
+                status,
+                normalized,
+                label + " readiness is set by an explicit backend runtime override.",
+                action);
+    }
+
+    private PlatformStatusResponse.DiagnosticStatus nextcloudStatus() {
+        if (hasText(platformProperties.nextcloudBaseUrl())) {
+            return new PlatformStatusResponse.DiagnosticStatus(
+                    "up",
+                    "ready",
+                    "The canonical Nextcloud technical route is configured for backend files/calendar diagnostics.",
+                    null);
+        }
+        return new PlatformStatusResponse.DiagnosticStatus(
+                "degraded",
+                "degraded",
+                "The canonical Nextcloud technical route is not configured.",
+                "Set WEAVE_NEXTCLOUD_BASE_URL to the raw Nextcloud/admin/protocol origin, for example https://files.weave.local.");
+    }
+
+    private PlatformStatusResponse.DiagnosticCheck check(
+            String key,
+            String label,
+            PlatformStatusResponse.DiagnosticStatus status) {
+        return new PlatformStatusResponse.DiagnosticCheck(
+                key,
+                label,
+                status.status(),
+                status.readiness(),
+                status.message(),
+                status.action());
+    }
+
+    private PlatformStatusResponse.DiagnosticCheck check(
+            String key,
+            String label,
+            PlatformStatusResponse.MatrixStatus status) {
+        return new PlatformStatusResponse.DiagnosticCheck(
+                key,
+                label,
+                status.status(),
+                status.readiness(),
+                status.message(),
+                status.action());
+    }
+
+    private List<String> actions(List<PlatformStatusResponse.DiagnosticCheck> checks) {
+        return checks.stream()
+                .map(PlatformStatusResponse.DiagnosticCheck::action)
+                .filter(this::hasText)
+                .distinct()
+                .toList();
     }
 
     private boolean hasText(String value) {
