@@ -44,6 +44,15 @@ weave:
     required-audience: ${WEAVE_OIDC_REQUIRED_AUDIENCE:weave-app}
     # JWT azp and/or client_id must identify the first-party Weave app client.
     client-id: ${WEAVE_CLIENT_ID:weave-app}
+  nextcloud:
+    files:
+      base-url: ${WEAVE_NEXTCLOUD_BASE_URL:https://files.weave.local}
+      webdav-root-path: ${WEAVE_NEXTCLOUD_FILES_WEBDAV_ROOT_PATH:/remote.php/dav/files}
+      # MVP backend-owned actor seam. Leave username/token blank to fail closed with
+      # nextcloud-adapter-not-configured instead of exposing caller credentials.
+      actor-model: ${WEAVE_NEXTCLOUD_FILES_ACTOR_MODEL:backend-service-account}
+      actor-username: ${WEAVE_NEXTCLOUD_FILES_ACTOR_USERNAME:}
+      actor-token: ${WEAVE_NEXTCLOUD_FILES_ACTOR_TOKEN:${WEAVE_NEXTCLOUD_FILES_APP_PASSWORD:}}
   workspace:
     shell-access:
       enabled: ${WEAVE_WORKSPACE_SHELL_ACCESS_ENABLED:true}
