@@ -38,6 +38,7 @@ class FirstPartyIdentityContractTest {
 
     private static final String REQUIRED_AUDIENCE = "weave-app";
     private static final String FIRST_PARTY_CLIENT_ID = "weave-app";
+    private static final String WORKSPACE_CAPABILITIES_PATH = "/api/workspace/capabilities";
 
     @Autowired
     private MockMvc mockMvc;
@@ -52,6 +53,13 @@ class FirstPartyIdentityContractTest {
 
     @Test
     void acceptsTokenWithFirstPartyContractAndWorkspaceScope() throws Exception {
+        mockMvc.perform(get(WORKSPACE_CAPABILITIES_PATH)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer valid-contract"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void keepsVersionedWorkspaceCapabilitiesPathAsCompatibilityAlias() throws Exception {
         mockMvc.perform(get("/api/v1/workspace/capabilities")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer valid-contract"))
                 .andExpect(status().isOk());
@@ -60,27 +68,27 @@ class FirstPartyIdentityContractTest {
     @ParameterizedTest
     @ValueSource(strings = {"wrong-audience", "missing-audience"})
     void rejectsTokensWithoutRequiredAudience(String tokenValue) throws Exception {
-        mockMvc.perform(get("/api/v1/workspace/capabilities")
+        mockMvc.perform(get(WORKSPACE_CAPABILITIES_PATH)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenValue))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("unauthorized"))
                 .andExpect(jsonPath("$.message").value(
                         "Bearer authentication is required and must satisfy the first-party Weave token contract."))
                 .andExpect(jsonPath("$.details.status").value(401))
-                .andExpect(jsonPath("$.details.path").value(endsWith("/api/v1/workspace/capabilities")))
+                .andExpect(jsonPath("$.details.path").value(endsWith(WORKSPACE_CAPABILITIES_PATH)))
                 .andExpect(jsonPath("$.requestId").value(notNullValue()));
     }
 
     @Test
     void rejectsTokenWithoutWorkspaceScope() throws Exception {
-        mockMvc.perform(get("/api/v1/workspace/capabilities")
+        mockMvc.perform(get(WORKSPACE_CAPABILITIES_PATH)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer missing-scope"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("forbidden"))
                 .andExpect(jsonPath("$.message").value(
                         "The bearer token is authenticated but missing the required weave:workspace scope."))
                 .andExpect(jsonPath("$.details.status").value(403))
-                .andExpect(jsonPath("$.details.path").value(endsWith("/api/v1/workspace/capabilities")))
+                .andExpect(jsonPath("$.details.path").value(endsWith(WORKSPACE_CAPABILITIES_PATH)))
                 .andExpect(jsonPath("$.requestId").value(notNullValue()));
     }
 
@@ -92,14 +100,14 @@ class FirstPartyIdentityContractTest {
             "conflicting-authorized-party"
     })
     void rejectsTokensWithoutRequiredAuthorizedParty(String tokenValue) throws Exception {
-        mockMvc.perform(get("/api/v1/workspace/capabilities")
+        mockMvc.perform(get(WORKSPACE_CAPABILITIES_PATH)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenValue))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void acceptsClientIdClaimWhenAzpIsAbsent() throws Exception {
-        mockMvc.perform(get("/api/v1/workspace/capabilities")
+        mockMvc.perform(get(WORKSPACE_CAPABILITIES_PATH)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer client-id-only"))
                 .andExpect(status().isOk());
     }

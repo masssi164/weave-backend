@@ -70,7 +70,13 @@ class WorkspaceControllerTest {
 
     @Test
     void rejectsAnonymousRequests() throws Exception {
+        mockMvc.perform(get("/api/workspace/capabilities"))
+                .andExpect(status().isUnauthorized());
+
         mockMvc.perform(get("/api/v1/workspace/capabilities"))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(get("/api/workspace/release-readiness"))
                 .andExpect(status().isUnauthorized());
 
         mockMvc.perform(get("/api/v1/workspace/release-readiness"))
