@@ -13,11 +13,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/workspace")
 @Tag(name = "Workspace", description = "Workspace readiness and capability endpoints.")
 public class WorkspaceController {
 
@@ -31,7 +29,7 @@ public class WorkspaceController {
         this.workspaceReleaseReadinessService = workspaceReleaseReadinessService;
     }
 
-    @GetMapping("/capabilities")
+    @GetMapping({"/api/workspace/capabilities", "/api/v1/workspace/capabilities"})
     @Operation(
             summary = "Get workspace capability readiness",
             description = "Returns the backend-owned workspace capability snapshot consumed by the Weave client.",
@@ -50,7 +48,7 @@ public class WorkspaceController {
         return workspaceCapabilityService.snapshot();
     }
 
-    @GetMapping("/release-readiness")
+    @GetMapping({"/api/workspace/release-readiness", "/api/v1/workspace/release-readiness"})
     @Operation(
             summary = "Get Release 1 workspace readiness",
             description = "Returns an operator-facing snapshot of the backend-owned Release 1 dependencies and remaining setup actions.",
