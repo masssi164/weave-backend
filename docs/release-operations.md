@@ -47,7 +47,7 @@ Protected endpoints return a stable JSON error envelope on auth failures and inc
   "message": "Bearer authentication is required and must satisfy the first-party Weave token contract.",
   "details": {
     "status": 401,
-    "path": "/api/v1/workspace/capabilities",
+    "path": "/api/workspace/capabilities",
     "error": "Unauthorized"
   },
   "requestId": "01HV..."
@@ -56,7 +56,9 @@ Protected endpoints return a stable JSON error envelope on auth failures and inc
 
 Use `401` for missing or invalid tokens. Use `403` when the token is authenticated but does not include `weave:workspace`.
 
-`/api/v1/workspace/release-readiness` is the backend-owned operator snapshot for Release 1. It rolls auth, Matrix chat, and Nextcloud files into one response and lists the exact remaining setup actions when the workspace is still degraded or blocked.
+`/api/workspace/release-readiness` is the backend-owned operator snapshot for Release 1. It rolls auth, Matrix chat, and Nextcloud files into one response and lists the exact remaining setup actions when the workspace is still degraded or blocked.
+
+The older `/api/v1/workspace/capabilities` and `/api/v1/workspace/release-readiness` paths remain compatibility aliases while clients migrate to the canonical non-versioned workspace routes.
 
 ## Minimum operator checks
 
@@ -65,8 +67,8 @@ Use `401` for missing or invalid tokens. Use `403` when the token is authenticat
 - `GET /api/platform/config` should return public product URLs, `matrixHomeserverUrl`, canonical `nextcloudBaseUrl`, and module flags
 - `GET /api/platform/status` should return module status for smoke and diagnostics
 - `GET /api/me` with a valid first-party token should return caller claims
-- `GET /api/v1/workspace/capabilities` with a valid first-party token should return the client-facing capability snapshot
-- `GET /api/v1/workspace/release-readiness` with a valid first-party token should return operator-facing Release 1 setup status and remaining actions
+- `GET /api/workspace/capabilities` with a valid first-party token should return the client-facing capability snapshot
+- `GET /api/workspace/release-readiness` with a valid first-party token should return operator-facing Release 1 setup status and remaining actions
 
 ## Logging and audit baseline
 

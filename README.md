@@ -17,8 +17,8 @@ This repository now starts as a JWT-protected Spring Boot API with:
 - `/api/health/live` and `/api/health/ready` endpoints for gateway and smoke checks
 - `/api/platform/config` and `/api/platform/status` endpoints for client bootstrap and diagnostics, including canonical `matrixHomeserverUrl` and `nextcloudBaseUrl` fields
 - a canonical `/api/me` endpoint for profile claim inspection and client/backend contract testing
-- a `/api/v1/workspace/capabilities` endpoint for the first backend-owned client contract
-- a `/api/v1/workspace/release-readiness` endpoint for operator-facing Release 1 setup status and remaining actions
+- `/api/workspace/capabilities` and compatibility `/api/v1/workspace/capabilities` endpoints for the first backend-owned client contract
+- `/api/workspace/release-readiness` and compatibility `/api/v1/workspace/release-readiness` endpoints for operator-facing Release 1 setup status and remaining actions
 - authenticated Files facade endpoints at `/api/files`, `/api/files/upload`, `/api/files/folders`, `/api/files/{id}/download`, and `/api/files/{id}` backed by Nextcloud WebDAV when configured
 - authenticated Calendar facade endpoints at `/api/calendar/events` and `/api/calendar/events/{id}`
 - OpenAPI JSON published at `/v3/api-docs`

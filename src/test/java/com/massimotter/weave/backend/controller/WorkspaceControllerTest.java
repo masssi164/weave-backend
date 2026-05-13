@@ -58,7 +58,33 @@ class WorkspaceControllerTest {
 
     @Test
     void returnsConfiguredWorkspaceCapabilities() throws Exception {
-        mockMvc.perform(get("/api/v1/workspace/capabilities").with(jwt()
+        assertConfiguredWorkspaceCapabilities("/api/workspace/capabilities");
+        assertConfiguredWorkspaceCapabilities("/api/v1/workspace/capabilities");
+    }
+
+    @Test
+    void returnsReleaseReadinessSnapshot() throws Exception {
+        assertReleaseReadinessSnapshot("/api/workspace/release-readiness");
+        assertReleaseReadinessSnapshot("/api/v1/workspace/release-readiness");
+    }
+
+    @Test
+    void rejectsAnonymousRequests() throws Exception {
+        mockMvc.perform(get("/api/workspace/capabilities"))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(get("/api/v1/workspace/capabilities"))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(get("/api/workspace/release-readiness"))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(get("/api/v1/workspace/release-readiness"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    private void assertConfiguredWorkspaceCapabilities(String path) throws Exception {
+        mockMvc.perform(get(path).with(jwt()
                         .authorities(new SimpleGrantedAuthority("SCOPE_weave:workspace"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.shellAccess.enabled").value(true))
@@ -70,9 +96,8 @@ class WorkspaceControllerTest {
                 .andExpect(jsonPath("$.boards.readiness").value("unavailable"));
     }
 
-    @Test
-    void returnsReleaseReadinessSnapshot() throws Exception {
-        mockMvc.perform(get("/api/v1/workspace/release-readiness").with(jwt()
+    private void assertReleaseReadinessSnapshot(String path) throws Exception {
+        mockMvc.perform(get(path).with(jwt()
                         .authorities(new SimpleGrantedAuthority("SCOPE_weave:workspace"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.readiness").value("ready"))
@@ -80,14 +105,5 @@ class WorkspaceControllerTest {
                 .andExpect(jsonPath("$.checks[1].key").value("chat"))
                 .andExpect(jsonPath("$.checks[2].key").value("files"))
                 .andExpect(jsonPath("$.actions").isEmpty());
-    }
-
-    @Test
-    void rejectsAnonymousRequests() throws Exception {
-        mockMvc.perform(get("/api/v1/workspace/capabilities"))
-                .andExpect(status().isUnauthorized());
-
-        mockMvc.perform(get("/api/v1/workspace/release-readiness"))
-                .andExpect(status().isUnauthorized());
     }
 }
