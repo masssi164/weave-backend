@@ -17,6 +17,7 @@ This repository now starts as a JWT-protected Spring Boot API with:
 - `/api/health/live` and `/api/health/ready` endpoints for gateway and smoke checks
 - `/api/platform/config` and `/api/platform/status` endpoints for client bootstrap and diagnostics, including canonical `matrixHomeserverUrl` and `nextcloudBaseUrl` fields
 - a canonical `/api/me` endpoint for profile claim inspection and client/backend contract testing
+- `/api/onboarding/status` for authenticated first-run invite, role/group, profile, Matrix, and Nextcloud provisioning status
 - `/api/workspace/capabilities` and compatibility `/api/v1/workspace/capabilities` endpoints for the first backend-owned client contract
 - `/api/workspace/release-readiness` and compatibility `/api/v1/workspace/release-readiness` endpoints for operator-facing Release 1 setup status and remaining actions
 - authenticated Files facade endpoints at `/api/files`, `/api/files/upload`, `/api/files/folders`, `/api/files/{id}/download`, and `/api/files/{id}` backed by Nextcloud WebDAV when configured
@@ -63,6 +64,8 @@ Optional runtime variables:
 - `WEAVE_CALDAV_REQUEST_TIMEOUT_SECONDS`: CalDAV request timeout, defaults to `10`
 - `WEAVE_WORKSPACE_BOARDS_ENABLED`: enable the boards capability, defaults to `false`
 - `WEAVE_WORKSPACE_BOARDS_READINESS`: optional explicit boards readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
+- `WEAVE_ONBOARDING_MATRIX_PROVISIONING_STATE`: optional first-run Matrix provisioning override (`not_configured`, `pending`, `ready`, `degraded`, `failed`); blank derives status from the chat capability
+- `WEAVE_ONBOARDING_NEXTCLOUD_PROVISIONING_STATE`: optional first-run Nextcloud provisioning override (`not_configured`, `pending`, `ready`, `degraded`, `failed`); blank derives status from files/calendar capability and Nextcloud route configuration
 - `WEAVE_PUBLIC_BASE_URL`: public product entrypoint, defaults to `https://weave.local`
 - `WEAVE_API_BASE_URL`: public backend API base URL, defaults to `https://api.weave.local/api`
 - `WEAVE_AUTH_BASE_URL`: public Keycloak base URL, defaults to `https://auth.weave.local`
@@ -84,6 +87,14 @@ Files adapter behavior:
 - Implemented WebDAV operations: folder listing with quota when returned by Nextcloud, folder creation, upload, download, and delete.
 - Move/share remain intentionally unsupported until product policy and endpoint contracts are specified.
 - No live Nextcloud integration is implied by unit tests; local/live validation still requires a configured `files.weave.local` and backend actor.
+
+First-run onboarding status:
+
+- `GET /api/onboarding/status` is protected by the same first-party bearer-token contract as `/api/me`.
+- The response includes identity, roles, groups, invite status, profile completeness, and module provisioning states for `identity`, `profile`, `matrix`, and `nextcloud`.
+- Invite status is derived from trusted token claims (`weave_invite_status` or `invite_status` when present), falling back to email verification state for local/dev seed users.
+- Matrix and Nextcloud provisioning states are frontend-safe `not_configured`, `pending`, `ready`, `degraded`, or `failed` values. They do not include downstream stack traces, tokens, or raw service errors.
+- Owner and admin map to workspace administration/invite authority; member can use workspace modules; guest is treated as restricted for first-run module access.
 
 Workspace capability source of truth:
 

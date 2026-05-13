@@ -20,6 +20,8 @@ Optional:
 - `WEAVE_FILES_PRODUCT_URL`: public files product surface, defaults to `https://weave.local/files`
 - `WEAVE_CALENDAR_PRODUCT_URL`: public calendar product surface, defaults to `https://weave.local/calendar`
 - `WEAVE_NEXTCLOUD_BASE_URL`: canonical Nextcloud URL, defaults to `https://files.weave.local`
+- `WEAVE_ONBOARDING_MATRIX_PROVISIONING_STATE`: optional first-run Matrix provisioning override (`not_configured`, `pending`, `ready`, `degraded`, `failed`); blank derives status from the chat capability
+- `WEAVE_ONBOARDING_NEXTCLOUD_PROVISIONING_STATE`: optional first-run Nextcloud provisioning override (`not_configured`, `pending`, `ready`, `degraded`, `failed`); blank derives status from files/calendar capability and Nextcloud route configuration
 - `PORT`: HTTP listen port, defaults to `8080`
 
 ## Local/dev public contract
@@ -56,6 +58,8 @@ Protected endpoints return a stable JSON error envelope on auth failures and inc
 
 Use `401` for missing or invalid tokens. Use `403` when the token is authenticated but does not include `weave:workspace`.
 
+`/api/onboarding/status` is the authenticated first-run user snapshot. It returns identity, role/group routing data, invite status, profile completeness, and frontend-safe provisioning states for identity, profile, Matrix, and Nextcloud. Matrix/Nextcloud states are `not_configured`, `pending`, `ready`, `degraded`, or `failed`; response messages must remain support-safe and must not expose downstream stack traces, secrets, tokens, or raw infrastructure errors.
+
 `/api/workspace/release-readiness` is the backend-owned operator snapshot for Release 1. It rolls auth, Matrix chat, and Nextcloud files into one response and lists the exact remaining setup actions when the workspace is still degraded or blocked.
 
 The older `/api/v1/workspace/capabilities` and `/api/v1/workspace/release-readiness` paths remain compatibility aliases while clients migrate to the canonical non-versioned workspace routes.
@@ -67,6 +71,7 @@ The older `/api/v1/workspace/capabilities` and `/api/v1/workspace/release-readin
 - `GET /api/platform/config` should return public product URLs, `matrixHomeserverUrl`, canonical `nextcloudBaseUrl`, and module flags
 - `GET /api/platform/status` should return module status for smoke and diagnostics
 - `GET /api/me` with a valid first-party token should return caller claims
+- `GET /api/onboarding/status` with a valid first-party token should return first-run invite, role/group, profile, Matrix, and Nextcloud provisioning status
 - `GET /api/workspace/capabilities` with a valid first-party token should return the client-facing capability snapshot
 - `GET /api/workspace/release-readiness` with a valid first-party token should return operator-facing Release 1 setup status and remaining actions
 
