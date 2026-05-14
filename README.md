@@ -17,7 +17,7 @@ Release 1 is an early operator-facing slice, not the full Teams/Slack migration 
 - first-run onboarding status at `/api/onboarding/status`
 - workspace capability and release-readiness snapshots at `/api/workspace/capabilities` and `/api/workspace/release-readiness`
 - Nextcloud-backed Files facade endpoints when a backend-owned actor is configured; otherwise they fail closed
-- Calendar facade endpoints mapped to Nextcloud CalDAV when backend actor credentials are configured; otherwise they fail closed
+- Calendar facade endpoints mapped to the backend actor's Nextcloud CalDAV workspace calendar when configured; unsafe private-user calendar templates fail closed
 - OpenAPI JSON at `/v3/api-docs`
 - Actuator health/info endpoints, Gradle wrapper, Dockerfile, and GitHub Actions CI
 

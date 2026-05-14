@@ -276,7 +276,11 @@ public class CalDavCalendarAdapter implements CalendarAdapter {
             throw new CalendarAdapterException(
                     CalendarAdapterException.Type.NOT_CONFIGURED,
                     "Calendar facade is available, but the downstream Nextcloud CalDAV adapter is not configured.",
-                    Map.of("module", "calendar", "operation", operation));
+                    Map.of(
+                            "module", "calendar",
+                            "operation", operation,
+                            "calendarScope", properties.calendarScope(),
+                            "privateUserTemplateAllowed", false));
         }
     }
 

@@ -44,6 +44,7 @@ class CalendarFacadeServiceTest {
 
         var response = service(adapter).list(startsAt.minusDays(1), endsAt.plusDays(1));
 
+        assertThat(response.scope().type()).isEqualTo("workspace");
         assertThat(response.events()).containsExactly(event);
         assertThat(capturedPrincipal.get().subject()).isEqualTo("user-123");
         assertThat(capturedPrincipal.get().nextcloudUserId()).isEqualTo("massimo");
