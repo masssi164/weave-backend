@@ -128,11 +128,13 @@ class BoardsPreviewContractTest {
     }
 
     @Test
-    void previewOpenApiContractDeclaresNoRoutes() throws Exception {
+    void previewOpenApiContractDeclaresHiddenLocalRoutesOnly() throws Exception {
         String contract = Files.readString(Path.of("src/main/resources/contracts/boards-preview.openapi.yaml"));
 
         assertThat(contract).contains("title: Weave Boards/Tasks Preview Contract");
-        assertThat(contract).contains("paths: {}");
+        assertThat(contract).contains("/api/boards/preview");
+        assertThat(contract).contains("/api/boards/{boardId}/tasks");
+        assertThat(contract).contains("post-release-hidden-preview");
         assertThat(contract).contains("TaskBoardEvent");
         assertThat(contract).contains("task.moved");
     }

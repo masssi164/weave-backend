@@ -1,5 +1,7 @@
 package com.massimotter.weave.backend.boards.domain;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum TaskStatus {
     OPEN("open"),
     BLOCKED("blocked"),
@@ -12,6 +14,7 @@ public enum TaskStatus {
         this.contractName = contractName;
     }
 
+    @JsonValue
     public String contractName() {
         return contractName;
     }
