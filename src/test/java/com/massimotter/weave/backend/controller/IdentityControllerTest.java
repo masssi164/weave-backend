@@ -4,6 +4,8 @@ import com.massimotter.weave.backend.config.ApiAccessDeniedHandler;
 import com.massimotter.weave.backend.config.ApiAuthenticationEntryPoint;
 import com.massimotter.weave.backend.config.ApiErrorResponseWriter;
 import com.massimotter.weave.backend.config.SecurityConfig;
+import com.massimotter.weave.backend.service.ProductProfileOverrideRepository;
+import com.massimotter.weave.backend.service.ProductProfileService;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -24,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(
         controllers = IdentityController.class,
         excludeAutoConfiguration = OAuth2ResourceServerAutoConfiguration.class)
-@Import({SecurityConfig.class, ApiAuthenticationEntryPoint.class, ApiAccessDeniedHandler.class, ApiErrorResponseWriter.class})
+@Import({SecurityConfig.class, ApiAuthenticationEntryPoint.class, ApiAccessDeniedHandler.class, ApiErrorResponseWriter.class, ProductProfileService.class})
 @org.springframework.test.context.TestPropertySource(properties = {
         "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://auth.weave.local/realms/weave"
 })
@@ -35,6 +37,9 @@ class IdentityControllerTest {
 
     @MockBean
     private JwtDecoder jwtDecoder;
+
+    @MockBean
+    private ProductProfileOverrideRepository profileRepository;
 
     @Test
     void returnsAuthenticatedPrincipalDetails() throws Exception {
