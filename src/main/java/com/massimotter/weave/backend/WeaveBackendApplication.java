@@ -1,6 +1,10 @@
 package com.massimotter.weave.backend;
 
 import com.massimotter.weave.backend.config.CalendarCalDavProperties;
+import com.massimotter.weave.backend.config.MigrationToolkitProperties;
+import com.massimotter.weave.backend.config.InteropGatewayProperties;
+import com.massimotter.weave.backend.config.GuestAccessProperties;
+import com.massimotter.weave.backend.config.ConnectorRuntimeProperties;
 import com.massimotter.weave.backend.config.NextcloudFilesProperties;
 import com.massimotter.weave.backend.config.OnboardingStatusProperties;
 import com.massimotter.weave.backend.config.PlatformContractProperties;
@@ -13,6 +17,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @SpringBootApplication
 @EnableConfigurationProperties({
         CalendarCalDavProperties.class,
+        ConnectorRuntimeProperties.class,
+        GuestAccessProperties.class,
+        InteropGatewayProperties.class,
+        MigrationToolkitProperties.class,
         NextcloudFilesProperties.class,
         OnboardingStatusProperties.class,
         PlatformContractProperties.class,

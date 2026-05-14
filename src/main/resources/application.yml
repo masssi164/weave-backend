@@ -99,3 +99,23 @@ weave:
     # Mount this path on durable storage for containerized Release 1 runs.
     storage:
       path: ${WEAVE_PROFILE_STORAGE_PATH:./data/profile-overrides.json}
+  interop:
+    enabled: ${WEAVE_INTEROP_ENABLED:false}
+    support-bundle-redaction-mode: ${WEAVE_INTEROP_SUPPORT_BUNDLE_REDACTION_MODE:support-safe-redacted}
+    slack:
+      enabled: ${WEAVE_INTEROP_SLACK_ENABLED:false}
+      client-id: ${WEAVE_INTEROP_SLACK_CLIENT_ID:}
+      client-secret-ref: ${WEAVE_INTEROP_SLACK_CLIENT_SECRET_REF:}
+      signing-secret-ref: ${WEAVE_INTEROP_SLACK_SIGNING_SECRET_REF:}
+      token-ref: ${WEAVE_INTEROP_SLACK_TOKEN_REF:}
+      workspace-id: ${WEAVE_INTEROP_SLACK_WORKSPACE_ID:}
+      channel-id: ${WEAVE_INTEROP_SLACK_CHANNEL_ID:}
+      room-id: ${WEAVE_INTEROP_SLACK_ROOM_ID:}
+    teams:
+      enabled: ${WEAVE_INTEROP_TEAMS_ENABLED:false}
+  guest:
+    enabled: ${WEAVE_GUEST_ENABLED:false}
+  migration:
+    enabled: ${WEAVE_MIGRATION_ENABLED:false}
+  connectors:
+    public-sdk-enabled: ${WEAVE_CONNECTORS_PUBLIC_SDK_ENABLED:false}
