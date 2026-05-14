@@ -10,6 +10,7 @@ import com.massimotter.weave.backend.boards.port.NoopTaskBoardEventPublisher;
 import com.massimotter.weave.backend.boards.support.BoardsErrorCode;
 import com.massimotter.weave.backend.boards.support.BoardsException;
 import com.massimotter.weave.backend.boards.vikunja.VikunjaBoardsRepository;
+import com.massimotter.weave.backend.boards.vikunja.VikunjaErrorMapper;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
@@ -60,6 +61,32 @@ class BoardsPreviewContractTest {
                         .isEqualTo(BoardsErrorCode.PROVIDER_UNAVAILABLE))
                 .hasMessageContaining("preview-only")
                 .hasMessageContaining("disabled");
+    }
+
+    @Test
+    void vikunjaErrorsMapToSupportSafeWeaveCodes() {
+        var mapper = new VikunjaErrorMapper();
+
+        assertThat(mapper.toBoardsException(401, "list-projects").code()).isEqualTo(BoardsErrorCode.UNAUTHORIZED);
+        assertThat(mapper.toBoardsException(403, "list-projects").code()).isEqualTo(BoardsErrorCode.FORBIDDEN);
+        assertThat(mapper.toBoardsException(404, "find-task").code()).isEqualTo(BoardsErrorCode.NOT_FOUND);
+        assertThat(mapper.toBoardsException(409, "move-task").code()).isEqualTo(BoardsErrorCode.CONFLICT);
+        assertThat(mapper.toBoardsException(422, "create-task").code()).isEqualTo(BoardsErrorCode.VALIDATION);
+        assertThat(mapper.toBoardsException(429, "sync").code()).isEqualTo(BoardsErrorCode.RATE_LIMITED);
+        assertThat(mapper.toBoardsException(0, "sync").code()).isEqualTo(BoardsErrorCode.OFFLINE);
+        assertThat(mapper.toBoardsException(503, "sync").code()).isEqualTo(BoardsErrorCode.PROVIDER_UNAVAILABLE);
+        assertThat(mapper.toBoardsException(418, "sync").code()).isEqualTo(BoardsErrorCode.UNKNOWN);
+    }
+
+    @Test
+    void vikunjaErrorDetailsDoNotLeakRawProviderMessages() {
+        var error = new VikunjaErrorMapper().toBoardsException(429, "sync");
+
+        assertThat(error.getMessage()).contains("rate-limited");
+        assertThat(error.details()).containsEntry("provider", "vikunja");
+        assertThat(error.details()).containsEntry("operation", "sync");
+        assertThat(error.details()).containsEntry("httpStatus", "429");
+        assertThat(error.details()).doesNotContainKeys("rawMessage", "url", "token");
     }
 
     @Test

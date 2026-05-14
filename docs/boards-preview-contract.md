@@ -11,6 +11,7 @@ Implemented now:
 - Provider-neutral Java domain records for projects, boards, columns, tasks, labels, comments, attachments, provider refs, capabilities, and normalized events.
 - A repository port that hides provider pagination, IDs, vocabulary, and raw errors from callers.
 - A support-safe error vocabulary aligned with the workspace spec.
+- A Vikunja HTTP/status error mapper that converts provider failures into Weave codes without leaking raw provider messages, URLs, or tokens.
 - A no-op event publisher boundary plus preview JSON/OpenAPI schema artifacts under `src/main/resources/contracts/`.
 - A first Vikunja adapter boundary and mapper that translates Vikunja projects/buckets/tasks into Weave concepts.
 - A fail-closed Vikunja repository placeholder that advertises preview capabilities but does not perform runtime HTTP calls.
@@ -41,7 +42,7 @@ Vikunja is the first strategic adapter boundary because it is lightweight, self-
 - Vikunja bucket → Weave board column
 - Vikunja task → Weave task item
 
-The repository placeholder fails closed with `provider_unavailable` until a promotion spec defines authentication, HTTP client behavior, persistence/sync expectations, route DTOs, and validation gates.
+The repository placeholder fails closed with `provider_unavailable` until a promotion spec defines authentication, HTTP client behavior, persistence/sync expectations, route DTOs, and validation gates. The adapter boundary now also contains the support-safe HTTP/status mapping expected once real Vikunja calls are introduced: unauthorized, forbidden, not found, conflict, validation, rate limit, offline, provider unavailable, and unknown failures are normalized before reaching product/API code.
 
 ## Contract artifacts
 
