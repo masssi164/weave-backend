@@ -1,5 +1,7 @@
 package com.massimotter.weave.backend.boards.domain;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum ColumnSemanticStatus {
     NOT_STARTED("not_started"),
     IN_PROGRESS("in_progress"),
@@ -13,6 +15,7 @@ public enum ColumnSemanticStatus {
         this.contractName = contractName;
     }
 
+    @JsonValue
     public String contractName() {
         return contractName;
     }

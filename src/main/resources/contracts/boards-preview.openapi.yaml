@@ -4,12 +4,147 @@ info:
   version: preview
   description: >-
     Preview-only provider-neutral schema components for future Boards/Tasks work.
-    This document intentionally declares no paths: the module is hidden, disabled
-    for Release 1, and not a published product API until a later promotion spec
-    defines routes, auth scopes, status codes, smoke/E2E, and accessibility gates.
-paths: {}
+    Hidden preview-only provider-neutral schema and route draft for future Boards/Tasks work.
+    The runtime routes are disabled by default, require the normal authenticated Weave
+    workspace boundary, use only a local/in-memory preview adapter, and do not publish
+    Boards/Tasks as a Release 1 product API.
+paths:
+  /api/boards/preview:
+    get:
+      summary: Read hidden Boards/Tasks preview snapshot
+      responses:
+        '200':
+          description: Provider-neutral hidden preview snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoardsPreviewResponse'
+        '401': { description: Missing or invalid bearer token. }
+        '403': { description: Missing weave:workspace scope. }
+        '503': { description: Preview runtime is disabled or unavailable. }
+  /api/boards/{boardId}/tasks:
+    post:
+      summary: Create a hidden preview task
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoardsCreateTaskRequest'
+      responses:
+        '200':
+          description: Created provider-neutral task.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskItem'
+  /api/boards/tasks/{taskId}/move:
+    post:
+      summary: Move a hidden preview task without drag-and-drop
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoardsMoveTaskRequest'
+      responses:
+        '200':
+          description: Moved provider-neutral task.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskItem'
+  /api/boards/tasks/{taskId}/complete:
+    post:
+      summary: Complete a hidden preview task without drag-and-drop
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Completed provider-neutral task.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskItem'
+
 components:
   schemas:
+
+    BoardsPreviewResponse:
+      type: object
+      required: [preview, releaseStatus, source, capabilities, projects, boards, tasks]
+      properties:
+        preview: { type: boolean }
+        releaseStatus:
+          type: string
+          enum: [post-release-hidden-preview]
+        source:
+          type: string
+          enum: [local-preview-backend-facade]
+        capabilities:
+          $ref: '#/components/schemas/BoardProviderCapabilities'
+        projects:
+          type: array
+          items: { $ref: '#/components/schemas/WeaveProject' }
+        boards:
+          type: array
+          items: { $ref: '#/components/schemas/Board' }
+        tasks:
+          type: array
+          items: { $ref: '#/components/schemas/TaskItem' }
+    BoardProviderCapabilities:
+      type: object
+      required: [provider, enabled, supported, unsupported, supportSafeSummary]
+      properties:
+        provider:
+          type: string
+          enum: [vikunja, openproject, nextcloud-deck, in-memory, unknown]
+        enabled: { type: boolean }
+        supported:
+          type: array
+          items:
+            type: string
+            enum: [comments, attachments, non_destructive_archive, webhook_events, incremental_sync, checklists, custom_fields, accessible_non_drag_moves]
+        unsupported:
+          type: array
+          items:
+            type: string
+            enum: [comments, attachments, non_destructive_archive, webhook_events, incremental_sync, checklists, custom_fields, accessible_non_drag_moves]
+        supportSafeSummary: { type: string }
+    BoardsCreateTaskRequest:
+      type: object
+      required: [columnId, title]
+      properties:
+        columnId: { type: string, maxLength: 128 }
+        title: { type: string, maxLength: 160 }
+        description: { type: string, maxLength: 2000 }
+        assigneeRefs:
+          type: array
+          items: { type: string, maxLength: 128 }
+        labelRefs:
+          type: array
+          items: { type: string, maxLength: 128 }
+        dueAt: { type: string, format: date-time }
+    BoardsMoveTaskRequest:
+      type: object
+      required: [targetColumnId, targetPosition]
+      properties:
+        targetColumnId: { type: string, maxLength: 128 }
+        targetPosition: { type: integer, minimum: 0 }
+
     ProviderRef:
       type: object
       required: [provider, externalId]

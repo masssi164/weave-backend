@@ -1,5 +1,7 @@
 package com.massimotter.weave.backend.boards.domain;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum BoardCapability {
     COMMENTS("comments"),
     ATTACHMENTS("attachments"),
@@ -16,6 +18,7 @@ public enum BoardCapability {
         this.contractName = contractName;
     }
 
+    @JsonValue
     public String contractName() {
         return contractName;
     }
