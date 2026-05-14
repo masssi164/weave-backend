@@ -57,6 +57,8 @@ Release 2 implications:
 `GET /api/calendar/client-setup` now exposes authenticated, secret-free setup metadata:
 
 - current calendar scope (`workspace`)
+- explicit access model metadata (`workspace-calendar`, private user calendars unavailable until a reviewed provisioning/sharing/delegated-token model exists)
+- profile/feed credential readiness metadata showing Apple profile signing, revocable credentials, and read-only subscription tokens are still blocked
 - current user's external calendar username
 - CalDAV discovery and principal URLs
 - platform option matrix for Apple `.mobileconfig`, Android DAVx5, desktop manual CalDAV, and webcal/ICS subscription
@@ -67,12 +69,13 @@ This endpoint is intentionally not a profile generator yet. It creates the contr
 ## Release 2 implementation sequence
 
 1. **Contract and setup metadata (this PR):** expose `/api/calendar/client-setup` and document the platform/security model.
-2. **Private/user calendar access model:** resolve `weave-backend#52` by choosing service-shared workspace calendar + optional per-user sharing, Nextcloud Login Flow/app passwords, or a Weave token bridge. Keep `{user}` CalDAV templates fail-closed until tested.
-3. **Apple profile generator:** add a signed `.mobileconfig` download endpoint that omits passwords or uses revocable scoped credentials only. Add tests proving no backend actor credential can appear in the profile.
-4. **Android setup handoff:** add app/UI support for DAVx5 setup URI, manual fallback instructions, and read-only subscription copy once tokenized ICS exists.
-5. **Read-only subscription tokens:** implement revocable webcal/ICS feed tokens for clients that cannot do CalDAV; label them one-way.
-6. **Calendar product promotion:** once create/read/update/delete and profile setup are safe, enable Calendar as a Release 2 module in app capability/navigation tests.
-7. **Boards/Tasks promotion:** after the provider-neutral API and Vikunja adapter are tested, enable Boards/Tasks with non-drag accessible movement as a hard release gate.
+2. **Access/credential readiness contract:** expose explicit access-model and credential-readiness fields so clients can show honest blocked states before any profile/feed download path exists. Keep `{user}` CalDAV templates fail-closed until tested.
+3. **Private/user calendar access model:** resolve `weave-backend#52` by choosing service-shared workspace calendar + optional per-user sharing, Nextcloud Login Flow/app passwords, or a Weave token bridge.
+4. **Apple profile generator:** add a signed `.mobileconfig` download endpoint that omits passwords or uses revocable scoped credentials only. Add tests proving no backend actor credential can appear in the profile.
+5. **Android setup handoff:** add app/UI support for DAVx5 setup URI, manual fallback instructions, and read-only subscription copy once tokenized ICS exists.
+6. **Read-only subscription tokens:** implement revocable webcal/ICS feed tokens for clients that cannot do CalDAV; label them one-way.
+7. **Calendar product promotion:** once create/read/update/delete and profile setup are safe, enable Calendar as a Release 2 module in app capability/navigation tests.
+8. **Boards/Tasks promotion:** after the provider-neutral API and Vikunja adapter are tested, enable Boards/Tasks with non-drag accessible movement as a hard release gate.
 
 ## References
 
