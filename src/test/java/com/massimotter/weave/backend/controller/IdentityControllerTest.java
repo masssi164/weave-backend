@@ -4,6 +4,7 @@ import com.massimotter.weave.backend.config.ApiAccessDeniedHandler;
 import com.massimotter.weave.backend.config.ApiAuthenticationEntryPoint;
 import com.massimotter.weave.backend.config.ApiErrorResponseWriter;
 import com.massimotter.weave.backend.config.SecurityConfig;
+import com.massimotter.weave.backend.service.ProductProfileOverrideRepository;
 import com.massimotter.weave.backend.service.ProductProfileService;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,9 @@ class IdentityControllerTest {
 
     @MockBean
     private JwtDecoder jwtDecoder;
+
+    @MockBean
+    private ProductProfileOverrideRepository profileRepository;
 
     @Test
     void returnsAuthenticatedPrincipalDetails() throws Exception {

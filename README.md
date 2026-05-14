@@ -67,6 +67,7 @@ Optional runtime variables:
 - `WEAVE_WORKSPACE_BOARDS_READINESS`: optional explicit boards readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
 - `WEAVE_ONBOARDING_MATRIX_PROVISIONING_STATE`: optional first-run Matrix provisioning override (`not_configured`, `pending`, `ready`, `degraded`, `failed`); blank derives status from the chat capability
 - `WEAVE_ONBOARDING_NEXTCLOUD_PROVISIONING_STATE`: optional first-run Nextcloud provisioning override (`not_configured`, `pending`, `ready`, `degraded`, `failed`); blank derives status from files/calendar capability and Nextcloud route configuration
+- `WEAVE_PROFILE_STORAGE_PATH`: durable JSON file path for mutable `PATCH /api/profile` overrides, defaults to `./data/profile-overrides.json`
 - `WEAVE_PUBLIC_BASE_URL`: public product entrypoint, defaults to `https://weave.local`
 - `WEAVE_API_BASE_URL`: public backend API base URL, defaults to `https://api.weave.local/api`
 - `WEAVE_AUTH_BASE_URL`: public Keycloak base URL, defaults to `https://auth.weave.local`
@@ -93,7 +94,8 @@ Product profile facade:
 
 - `GET /api/profile`, `PATCH /api/profile`, and `GET /api/profile/sync-status` are protected by the same first-party bearer-token contract as `/api/me`.
 - `PATCH /api/profile` accepts partial updates for mutable product profile fields: `displayName`, `avatar`, `locale`, `timezone`, `accessibilityPreferences`, and `profileVisibility`.
-- Updated profile fields are reflected in the backend-owned profile facade and `/api/me` snapshot for the authenticated subject. The current local implementation keeps these mutable profile overrides in process memory until a persistent profile store and Matrix/Nextcloud propagation job are added.
+- Updated profile fields are persisted in the configured backend profile override store and reflected in the backend-owned profile facade and `/api/me` snapshot for the authenticated subject after service/repository recreation.
+- Set `WEAVE_PROFILE_STORAGE_PATH` to a mounted durable path for containerized Release 1 runs; the default local path is `./data/profile-overrides.json`.
 - Profile sync status is frontend-safe and reports Matrix/Nextcloud as `not_configured` until module propagation is implemented.
 
 First-run onboarding status:

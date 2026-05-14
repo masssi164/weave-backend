@@ -12,7 +12,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -25,7 +24,11 @@ public class ProductProfileService {
     private static final ModuleSyncStatusResponse NOT_CONFIGURED_SYNC =
             new ModuleSyncStatusResponse("not_configured", "not_configured");
 
-    private final Map<String, StoredProductProfile> profiles = new ConcurrentHashMap<>();
+    private final ProductProfileOverrideRepository profileRepository;
+
+    public ProductProfileService(ProductProfileOverrideRepository profileRepository) {
+        this.profileRepository = profileRepository;
+    }
 
     public AuthenticatedUserResponse authenticatedUser(Jwt jwt) {
         ProductProfileSnapshot snapshot = snapshot(jwt);
@@ -50,9 +53,17 @@ public class ProductProfileService {
     }
 
     public ProductProfileResponse update(Jwt jwt, UpdateProductProfileRequest request) {
-        requireSubject(jwt);
+        String subject = requireSubject(jwt);
         validateRequest(request);
-        profiles.compute(jwt.getSubject(), (subject, existing) -> merge(existing, request));
+        try {
+            profileRepository.save(subject, merge(profileRepository.findBySubject(subject), request));
+        } catch (ProductProfileStoreException exception) {
+            throw new ApiErrorException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "profile-persistence-error",
+                    "Product profile update could not be persisted.",
+                    Map.of("store", "profile-overrides"));
+        }
         return profile(jwt);
     }
 
@@ -64,7 +75,7 @@ public class ProductProfileService {
     private ProductProfileSnapshot snapshot(Jwt jwt) {
         String subject = requireSubject(jwt);
         String username = firstText(jwt.getClaimAsString("preferred_username"), subject);
-        StoredProductProfile stored = profiles.get(subject);
+        ProductProfileOverride stored = profileRepository.findBySubject(subject);
         String displayName = stored != null && hasText(stored.displayName())
                 ? stored.displayName()
                 : firstText(jwt.getClaimAsString("name"), username);
@@ -100,8 +111,8 @@ public class ProductProfileService {
                 NOT_CONFIGURED_SYNC);
     }
 
-    private StoredProductProfile merge(StoredProductProfile existing, UpdateProductProfileRequest request) {
-        return new StoredProductProfile(
+    private ProductProfileOverride merge(ProductProfileOverride existing, UpdateProductProfileRequest request) {
+        return new ProductProfileOverride(
                 valueOrExisting(request.displayName(), existing == null ? null : existing.displayName()),
                 valueOrExisting(request.avatar(), existing == null ? null : existing.avatar()),
                 valueOrExisting(request.locale(), existing == null ? null : existing.locale()),
@@ -249,15 +260,6 @@ public class ProductProfileService {
 
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
-    }
-
-    private record StoredProductProfile(
-            String displayName,
-            String avatar,
-            String locale,
-            String timezone,
-            Map<String, String> accessibilityPreferences,
-            String profileVisibility) {
     }
 
     private record ProductProfileSnapshot(

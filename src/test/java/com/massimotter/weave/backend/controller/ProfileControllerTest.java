@@ -5,9 +5,13 @@ import com.massimotter.weave.backend.config.ApiAuthenticationEntryPoint;
 import com.massimotter.weave.backend.config.ApiErrorResponseWriter;
 import com.massimotter.weave.backend.config.SecurityConfig;
 import com.massimotter.weave.backend.exception.ApiExceptionHandler;
+import com.massimotter.weave.backend.service.ProductProfileOverride;
+import com.massimotter.weave.backend.service.ProductProfileOverrideRepository;
 import com.massimotter.weave.backend.service.ProductProfileService;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration;
@@ -19,6 +23,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -46,6 +53,21 @@ class ProfileControllerTest {
 
     @MockBean
     private JwtDecoder jwtDecoder;
+
+    @MockBean
+    private ProductProfileOverrideRepository profileRepository;
+
+    private final Map<String, ProductProfileOverride> profileOverrides = new HashMap<>();
+
+    @BeforeEach
+    void setUpProfileRepository() {
+        profileOverrides.clear();
+        when(profileRepository.findBySubject(anyString())).thenAnswer(invocation -> profileOverrides.get(invocation.getArgument(0)));
+        when(profileRepository.save(anyString(), any(ProductProfileOverride.class))).thenAnswer(invocation -> {
+            profileOverrides.put(invocation.getArgument(0), invocation.getArgument(1));
+            return invocation.getArgument(1);
+        });
+    }
 
     @Test
     void returnsProfileDerivedFromAuthenticatedPrincipal() throws Exception {
