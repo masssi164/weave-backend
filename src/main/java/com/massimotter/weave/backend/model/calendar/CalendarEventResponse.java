@@ -22,5 +22,25 @@ public record CalendarEventResponse(
         @Schema(description = "Whether the event is all-day.")
         boolean allDay,
         @Schema(description = "Opaque revision token used for conflict detection when available.")
-        String etag) {
+        String etag,
+        @Schema(description = "Calendar scope used for this facade event.")
+        CalendarScopeResponse scope) {
+
+    public CalendarEventResponse(
+            String id,
+            String title,
+            String description,
+            OffsetDateTime startsAt,
+            OffsetDateTime endsAt,
+            String timezone,
+            String location,
+            boolean allDay,
+            String etag) {
+        this(id, title, description, startsAt, endsAt, timezone, location, allDay, etag,
+                CalendarScopeResponse.workspace());
+    }
+
+    public CalendarEventResponse {
+        scope = scope == null ? CalendarScopeResponse.workspace() : scope;
+    }
 }

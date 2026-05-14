@@ -14,7 +14,7 @@ public record CalendarCalDavProperties(
     public CalendarCalDavProperties {
         baseUrl = trimToNull(baseUrl);
         calendarPathTemplate = defaultIfBlank(calendarPathTemplate,
-                "/remote.php/dav/calendars/{user}/personal/");
+                "/remote.php/dav/calendars/weave-backend/personal/");
         authMode = authMode == null ? AuthMode.BASIC : authMode;
         backendUsername = trimToNull(backendUsername);
         backendToken = trimToNull(backendToken);
@@ -22,13 +22,21 @@ public record CalendarCalDavProperties(
     }
 
     public boolean isConfigured() {
-        if (baseUrl == null || !calendarPathTemplate.contains("{user}")) {
+        if (baseUrl == null || targetsPrivateUserCalendar()) {
             return false;
         }
         if (authMode == AuthMode.BEARER) {
             return backendToken != null;
         }
         return backendUsername != null && backendToken != null;
+    }
+
+    public boolean targetsPrivateUserCalendar() {
+        return calendarPathTemplate != null && calendarPathTemplate.contains("{user}");
+    }
+
+    public String calendarScope() {
+        return targetsPrivateUserCalendar() ? "private-user" : "workspace";
     }
 
     public enum AuthMode {

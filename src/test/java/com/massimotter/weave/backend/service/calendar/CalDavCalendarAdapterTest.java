@@ -40,15 +40,37 @@ class CalDavCalendarAdapterTest {
     }
 
     @Test
+    void rejectsPrivateUserCalendarTemplatesUntilAccessModelIsContracted() {
+        CalDavCalendarAdapter adapter = new CalDavCalendarAdapter(new CalendarCalDavProperties(
+                "https://files.weave.local",
+                "/remote.php/dav/calendars/{user}/personal/",
+                CalendarCalDavProperties.AuthMode.BASIC,
+                "weave-backend",
+                "secret",
+                1));
+
+        assertThatThrownBy(() -> adapter.list(principal(), null, null))
+                .isInstanceOf(CalendarAdapterException.class)
+                .satisfies(error -> {
+                    CalendarAdapterException adapterError = (CalendarAdapterException) error;
+                    assertThat(adapterError.type()).isEqualTo(CalendarAdapterException.Type.NOT_CONFIGURED);
+                    assertThat(adapterError.details()).containsEntry("calendarScope", "private-user");
+                    assertThat(adapterError.details()).containsEntry("privateUserTemplateAllowed", false);
+                });
+    }
+
+    @Test
     void listsEventsWithCalDavCalendarQuery() throws Exception {
         List<String> methods = new ArrayList<>();
+        List<String> paths = new ArrayList<>();
         server = server(exchange -> {
             methods.add(exchange.getRequestMethod());
+            paths.add(exchange.getRequestURI().getRawPath());
             String response = """
                     <?xml version="1.0" encoding="utf-8"?>
                     <d:multistatus xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
                       <d:response>
-                        <d:href>/remote.php/dav/calendars/massimo/personal/planning.ics</d:href>
+                        <d:href>/remote.php/dav/calendars/weave-backend/personal/planning.ics</d:href>
                         <d:propstat><d:prop>
                           <d:getetag>\"etag-1\"</d:getetag>
                           <c:calendar-data>BEGIN:VCALENDAR&#13;
@@ -73,9 +95,11 @@ END:VCALENDAR&#13;
                 OffsetDateTime.parse("2026-04-27T00:00:00+02:00"));
 
         assertThat(methods).containsExactly("REPORT");
+        assertThat(paths).containsExactly("/remote.php/dav/calendars/weave-backend/personal/");
         assertThat(events).hasSize(1);
         assertThat(events.get(0).title()).isEqualTo("Planning");
         assertThat(events.get(0).etag()).isEqualTo("\"etag-1\"");
+        assertThat(events.get(0).scope().type()).isEqualTo("workspace");
     }
 
     @Test
@@ -127,7 +151,7 @@ END:VCALENDAR&#13;
     private CalDavCalendarAdapter adapter() {
         return new CalDavCalendarAdapter(new CalendarCalDavProperties(
                 "http://localhost:" + server.getAddress().getPort(),
-                "/remote.php/dav/calendars/{user}/personal/",
+                "/remote.php/dav/calendars/weave-backend/personal/",
                 CalendarCalDavProperties.AuthMode.BASIC,
                 "backend",
                 "secret",

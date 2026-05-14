@@ -59,13 +59,15 @@ If the actor model, username, or token is missing, files endpoints fail closed w
 Calendar product operations stay on `/api`; this backend is the only component that talks to Nextcloud CalDAV.
 
 - `WEAVE_CALDAV_BASE_URL`: Nextcloud origin used by the backend CalDAV adapter, defaults to `WEAVE_NEXTCLOUD_BASE_URL` or `https://files.weave.local`.
-- `WEAVE_CALDAV_CALENDAR_PATH_TEMPLATE`: CalDAV calendar collection template, defaults to `/remote.php/dav/calendars/{user}/personal/`; `{user}` is derived from authenticated token `preferred_username`, falling back to `sub`.
+- `WEAVE_CALDAV_CALENDAR_PATH_TEMPLATE`: CalDAV calendar collection path for the backend-owned workspace calendar, defaults to `/remote.php/dav/calendars/${WEAVE_CALDAV_BACKEND_USERNAME:-weave-backend}/personal/`.
 - `WEAVE_CALDAV_AUTH_MODE`: backend actor credential mode (`BASIC` or `BEARER`), defaults to `BASIC`.
 - `WEAVE_CALDAV_BACKEND_USERNAME`: backend actor username for Basic auth; required with `BASIC`.
 - `WEAVE_CALDAV_BACKEND_TOKEN`: backend actor app password/token or bearer token; required for the CalDAV adapter to call Nextcloud.
 - `WEAVE_CALDAV_REQUEST_TIMEOUT_SECONDS`: CalDAV request timeout, defaults to `10`.
 
-When required actor credentials are missing, calendar operations fail closed with `nextcloud-adapter-not-configured`. Recurrence creation, editing, and expansion are deferred: the current DTO has no RRULE contract, and the adapter does not expose raw recurrence fields. Recurring events returned by CalDAV may appear as their source VEVENT only until a later product/API spec defines full recurrence UX.
+The Release 1 calendar facade is explicitly scoped to the Weave workspace calendar owned by the backend actor. `WEAVE_CALDAV_CALENDAR_PATH_TEMPLATE` values containing `{user}` are treated as private-user calendar targets and fail closed with `nextcloud-adapter-not-configured` until a reviewed provisioning/sharing/delegated-token model is specified. The facade responses include `scope.type = "workspace"` so clients do not present this first slice as a private per-user calendar.
+
+When required actor credentials are missing or an unsafe private-user template is configured, calendar operations fail closed with `nextcloud-adapter-not-configured`. Recurrence creation, editing, and expansion are deferred: the current DTO has no RRULE contract, and the adapter does not expose raw recurrence fields. Recurring events returned by CalDAV may appear as their source VEVENT only until a later product/API spec defines full recurrence UX.
 
 ## Profile and onboarding variables
 
