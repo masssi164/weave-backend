@@ -58,6 +58,8 @@ Protected endpoints return a stable JSON error envelope on auth failures and inc
 
 Use `401` for missing or invalid tokens. Use `403` when the token is authenticated but does not include `weave:workspace`.
 
+`GET /api/profile`, `PATCH /api/profile`, and `GET /api/profile/sync-status` are the authenticated product profile facade. `PATCH /api/profile` supports partial updates to `displayName`, `avatar`, `locale`, `timezone`, `accessibilityPreferences`, and `profileVisibility`; validation errors use the same stable JSON error envelope. The current Release 1 implementation stores mutable profile overrides in backend process memory and reports Matrix/Nextcloud profile sync as `not_configured` until persistent storage and module propagation are implemented.
+
 `/api/onboarding/status` is the authenticated first-run user snapshot. It returns identity, role/group routing data, invite status, profile completeness, and frontend-safe provisioning states for identity, profile, Matrix, and Nextcloud. Matrix/Nextcloud states are `not_configured`, `pending`, `ready`, `degraded`, or `failed`; response messages must remain support-safe and must not expose downstream stack traces, secrets, tokens, or raw infrastructure errors.
 
 `/api/workspace/release-readiness` is the backend-owned operator snapshot for Release 1. It rolls auth, Matrix chat, and Nextcloud files into one response and lists the exact remaining setup actions when the workspace is still degraded or blocked.
@@ -71,6 +73,8 @@ The older `/api/v1/workspace/capabilities` and `/api/v1/workspace/release-readin
 - `GET /api/platform/config` should return public product URLs, `matrixHomeserverUrl`, canonical `nextcloudBaseUrl`, and module flags
 - `GET /api/platform/status` should return module status for smoke and diagnostics
 - `GET /api/me` with a valid first-party token should return caller claims
+- `GET /api/profile` and `PATCH /api/profile` with a valid first-party token should return the product profile facade and updated mutable profile fields
+- `GET /api/profile/sync-status` with a valid first-party token should return frontend-safe Matrix/Nextcloud profile sync state
 - `GET /api/onboarding/status` with a valid first-party token should return first-run invite, role/group, profile, Matrix, and Nextcloud provisioning status
 - `GET /api/workspace/capabilities` with a valid first-party token should return the client-facing capability snapshot
 - `GET /api/workspace/release-readiness` with a valid first-party token should return operator-facing Release 1 setup status and remaining actions

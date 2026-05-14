@@ -17,6 +17,7 @@ This repository now starts as a JWT-protected Spring Boot API with:
 - `/api/health/live` and `/api/health/ready` endpoints for gateway and smoke checks
 - `/api/platform/config` and `/api/platform/status` endpoints for client bootstrap and diagnostics, including canonical `matrixHomeserverUrl` and `nextcloudBaseUrl` fields
 - a canonical `/api/me` endpoint for profile claim inspection and client/backend contract testing
+- authenticated product profile facade endpoints at `GET /api/profile`, `PATCH /api/profile`, and `GET /api/profile/sync-status`
 - `/api/onboarding/status` for authenticated first-run invite, role/group, profile, Matrix, and Nextcloud provisioning status
 - `/api/workspace/capabilities` and compatibility `/api/v1/workspace/capabilities` endpoints for the first backend-owned client contract
 - `/api/workspace/release-readiness` and compatibility `/api/v1/workspace/release-readiness` endpoints for operator-facing Release 1 setup status and remaining actions
@@ -87,6 +88,13 @@ Files adapter behavior:
 - Implemented WebDAV operations: folder listing with quota when returned by Nextcloud, folder creation, upload, download, and delete.
 - Move/share remain intentionally unsupported until product policy and endpoint contracts are specified.
 - No live Nextcloud integration is implied by unit tests; local/live validation still requires a configured `files.weave.local` and backend actor.
+
+Product profile facade:
+
+- `GET /api/profile`, `PATCH /api/profile`, and `GET /api/profile/sync-status` are protected by the same first-party bearer-token contract as `/api/me`.
+- `PATCH /api/profile` accepts partial updates for mutable product profile fields: `displayName`, `avatar`, `locale`, `timezone`, `accessibilityPreferences`, and `profileVisibility`.
+- Updated profile fields are reflected in the backend-owned profile facade and `/api/me` snapshot for the authenticated subject. The current local implementation keeps these mutable profile overrides in process memory until a persistent profile store and Matrix/Nextcloud propagation job are added.
+- Profile sync status is frontend-safe and reports Matrix/Nextcloud as `not_configured` until module propagation is implemented.
 
 First-run onboarding status:
 
