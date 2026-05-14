@@ -13,6 +13,8 @@ import com.massimotter.weave.backend.model.calendar.CreateCalendarEventRequest;
 import com.massimotter.weave.backend.model.calendar.UpdateCalendarEventRequest;
 import com.massimotter.weave.backend.service.calendar.CalendarAdapter;
 import com.massimotter.weave.backend.service.calendar.CalendarAdapterException;
+import com.massimotter.weave.backend.service.calendar.AppleMobileConfigProfile;
+import com.massimotter.weave.backend.service.calendar.AppleMobileConfigProfileRenderer;
 import com.massimotter.weave.backend.service.calendar.CalendarPrincipal;
 import java.net.URI;
 import java.time.OffsetDateTime;
@@ -34,6 +36,7 @@ public class CalendarFacadeService {
 
     private final ObjectProvider<CalendarAdapter> calendarAdapterProvider;
     private final String nextcloudBaseUrl;
+    private final AppleMobileConfigProfileRenderer appleProfileRenderer;
 
     public CalendarFacadeService(ObjectProvider<CalendarAdapter> calendarAdapterProvider) {
         this(calendarAdapterProvider, "https://files.weave.local");
@@ -47,6 +50,7 @@ public class CalendarFacadeService {
         this.nextcloudBaseUrl = nextcloudBaseUrl == null || nextcloudBaseUrl.isBlank()
                 ? "https://files.weave.local"
                 : nextcloudBaseUrl.trim();
+        this.appleProfileRenderer = new AppleMobileConfigProfileRenderer(this.nextcloudBaseUrl);
     }
 
     public CalendarEventsResponse list(OffsetDateTime from, OffsetDateTime to) {
@@ -104,11 +108,11 @@ public class CalendarFacadeService {
                                 "mobileconfig",
                                 false,
                                 null,
-                                "Signed .mobileconfig generation and revocable per-client credentials are not implemented yet.",
+                                "Signed .mobileconfig download remains fail-closed until profile signing and revocable credentials are implemented.",
                                 List.of(
                                         "iOS, iPadOS, and macOS can install a CalDAV configuration profile with host, port, SSL, principal URL, and username.",
                                         "Release 2 must not embed a permanent password or backend service credential in the profile.",
-                                        "The safe target is a signed profile that omits the password or uses a revocable scoped token.")),
+                                        "The backend route is reserved for a signed no-secret profile and currently returns 503 rather than serving an unsigned artifact.")),
                         new CalendarClientSetupOptionResponse(
                                 "android",
                                 "davx5",
@@ -138,6 +142,27 @@ public class CalendarFacadeService {
                                 List.of(
                                         "ICS/webcal is one-way subscription/download, not full two-way CalDAV sync.",
                                         "It is useful for clients without CalDAV support once scoped feed tokens and revocation are available."))));
+    }
+
+
+    public AppleMobileConfigProfile appleMobileConfigProfile() {
+        // Keep the download route present but unavailable until a real signing path is wired.
+        // The unsigned renderer is covered by tests so the future signer has a no-secret input artifact.
+        appleProfileRenderer.renderUnsignedNoSecretProfile(principal());
+        throw new ApiErrorException(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "calendar-apple-profile-unavailable",
+                "Apple Calendar profile download is not available until signed no-secret profile generation is configured.",
+                Map.of(
+                        "module", "calendar",
+                        "operation", "download-apple-mobileconfig",
+                        "requiresSignedProfile", true,
+                        "passwordIncluded", false,
+                        "backendActorCredentialsExposed", false,
+                        "blockers", List.of(
+                                "Profile signing is not configured or implemented in this backend slice.",
+                                "Revocable per-client CalDAV credential issuance remains a prerequisite for password-bearing profiles.",
+                                "Unsigned profiles are deliberately not downloadable from the authenticated API.")));
     }
 
     private CalendarAccessModelResponse accessModel() {

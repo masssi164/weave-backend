@@ -7,6 +7,7 @@ import com.massimotter.weave.backend.model.calendar.CalendarEventsResponse;
 import com.massimotter.weave.backend.model.calendar.CreateCalendarEventRequest;
 import com.massimotter.weave.backend.model.calendar.UpdateCalendarEventRequest;
 import com.massimotter.weave.backend.service.CalendarFacadeService;
+import com.massimotter.weave.backend.service.calendar.AppleMobileConfigProfile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,6 +19,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import java.time.OffsetDateTime;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -69,6 +72,23 @@ public class CalendarController {
             content = @Content(schema = @Schema(implementation = CalendarClientSetupResponse.class)))
     public CalendarClientSetupResponse clientSetup() {
         return calendarFacadeService.clientSetup();
+    }
+
+
+    @GetMapping(
+            value = "/api/calendar/client-setup/apple.mobileconfig",
+            produces = "application/x-apple-aspen-config")
+    @Operation(summary = "Download a signed Apple Calendar setup profile")
+    @ApiResponse(responseCode = "200", description = "Signed secret-free Apple Calendar .mobileconfig profile.",
+            content = @Content(mediaType = "application/x-apple-aspen-config"))
+    @ApiResponse(responseCode = "503", description = "Profile signing or revocable credential support is not configured yet.",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    public ResponseEntity<byte[]> appleMobileConfigProfile() {
+        AppleMobileConfigProfile profile = calendarFacadeService.appleMobileConfigProfile();
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("application/x-apple-aspen-config"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + profile.filename() + "\"")
+                .body(profile.content());
     }
 
     @PostMapping("/api/calendar/events")
