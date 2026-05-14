@@ -1,0 +1,140 @@
+openapi: 3.0.3
+info:
+  title: Weave Boards/Tasks Preview Contract
+  version: preview
+  description: >-
+    Preview-only provider-neutral schema components for future Boards/Tasks work.
+    This document intentionally declares no paths: the module is hidden, disabled
+    for Release 1, and not a published product API until a later promotion spec
+    defines routes, auth scopes, status codes, smoke/E2E, and accessibility gates.
+paths: {}
+components:
+  schemas:
+    ProviderRef:
+      type: object
+      required: [provider, externalId]
+      properties:
+        provider:
+          type: string
+          enum: [vikunja, openproject, nextcloud-deck, in-memory, unknown]
+        externalId:
+          type: string
+        externalUrl:
+          type: string
+          format: uri
+        version:
+          type: string
+        etag:
+          type: string
+        lastSyncedAt:
+          type: string
+          format: date-time
+    WeaveProject:
+      type: object
+      required: [id, name, visibility, memberRefs, providerRefs]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        visibility:
+          type: string
+          enum: [private, workspace, public]
+        memberRefs:
+          type: array
+          items: { type: string }
+        providerRefs:
+          type: array
+          items: { $ref: '#/components/schemas/ProviderRef' }
+    Board:
+      type: object
+      required: [id, projectId, name, columns, archived, providerRefs]
+      properties:
+        id: { type: string }
+        projectId: { type: string }
+        name: { type: string }
+        description: { type: string }
+        columns:
+          type: array
+          items: { $ref: '#/components/schemas/BoardColumn' }
+        archived: { type: boolean }
+        providerRefs:
+          type: array
+          items: { $ref: '#/components/schemas/ProviderRef' }
+    BoardColumn:
+      type: object
+      required: [id, boardId, name, position, semanticStatus, providerRefs]
+      properties:
+        id: { type: string }
+        boardId: { type: string }
+        name: { type: string }
+        position: { type: integer, minimum: 0 }
+        semanticStatus:
+          type: string
+          enum: [not_started, in_progress, blocked, done, archived]
+        wipLimit:
+          type: integer
+          minimum: 1
+        providerRefs:
+          type: array
+          items: { $ref: '#/components/schemas/ProviderRef' }
+    TaskItem:
+      type: object
+      required: [id, boardId, columnId, title, status, position, assigneeRefs, labelRefs, updatedAt, providerRefs]
+      properties:
+        id: { type: string }
+        boardId: { type: string }
+        columnId: { type: string }
+        title: { type: string }
+        description: { type: string }
+        status:
+          type: string
+          enum: [open, blocked, completed, archived]
+        position: { type: integer, minimum: 0 }
+        assigneeRefs:
+          type: array
+          items: { type: string }
+        labelRefs:
+          type: array
+          items: { type: string }
+        priority:
+          type: string
+          enum: [low, normal, high, urgent]
+        startAt: { type: string, format: date-time }
+        dueAt: { type: string, format: date-time }
+        completedAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        providerRefs:
+          type: array
+          items: { $ref: '#/components/schemas/ProviderRef' }
+    TaskBoardEvent:
+      type: object
+      required: [idempotencyKey, type, actorRef, occurredAt, workspaceId, redactionLevel, payload]
+      properties:
+        idempotencyKey: { type: string }
+        type:
+          type: string
+          enum:
+            - task.created
+            - task.updated
+            - task.completed
+            - task.archived
+            - task.moved
+            - assignment.changed
+            - label.changed
+            - priority.changed
+            - due_date.changed
+            - comment.added
+            - attachment.changed
+            - sync.conflict_detected
+        actorRef: { type: string }
+        occurredAt: { type: string, format: date-time }
+        workspaceId: { type: string }
+        projectId: { type: string }
+        boardId: { type: string }
+        taskId: { type: string }
+        providerRef: { $ref: '#/components/schemas/ProviderRef' }
+        redactionLevel:
+          type: string
+          enum: [public_metadata, workspace_internal, support_safe, private_content]
+        payload:
+          type: object
+          additionalProperties: true
