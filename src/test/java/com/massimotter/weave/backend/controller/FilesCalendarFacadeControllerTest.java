@@ -90,6 +90,31 @@ class FilesCalendarFacadeControllerTest {
     }
 
     @Test
+    void calendarClientSetupExposesSecretFreePlatformOptionsWithoutAdapterCredentials() throws Exception {
+        mockMvc.perform(get("/api/calendar/client-setup")
+                        .with(workspaceJwt()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.scope.type").value("workspace"))
+                .andExpect(jsonPath("$.scope.label").value("Weave workspace calendar"))
+                .andExpect(jsonPath("$.username").value("user-123"))
+                .andExpect(jsonPath("$.endpoints.serverUrl").value("https://files.weave.local"))
+                .andExpect(jsonPath("$.endpoints.caldavDiscoveryUrl")
+                        .value("https://files.weave.local/remote.php/dav"))
+                .andExpect(jsonPath("$.endpoints.principalUrl")
+                        .value("https://files.weave.local/remote.php/dav/principals/users/user-123/"))
+                .andExpect(jsonPath("$.options[0].platform").value("apple"))
+                .andExpect(jsonPath("$.options[0].method").value("mobileconfig"))
+                .andExpect(jsonPath("$.options[0].available").value(false))
+                .andExpect(jsonPath("$.options[1].platform").value("android"))
+                .andExpect(jsonPath("$.options[1].method").value("davx5"))
+                .andExpect(jsonPath("$.options[1].available").value(true))
+                .andExpect(jsonPath("$.options[1].actionUrl")
+                        .value("davx5://files.weave.local/remote.php/dav"))
+                .andExpect(jsonPath("$.options[3].platform").value("subscription"))
+                .andExpect(jsonPath("$.options[3].available").value(false));
+    }
+
+    @Test
     void facadeRequestsUseStableValidationEnvelope() throws Exception {
         String invalidEvent = """
                 {

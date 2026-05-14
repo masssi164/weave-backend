@@ -1,6 +1,7 @@
 package com.massimotter.weave.backend.controller;
 
 import com.massimotter.weave.backend.model.ApiErrorResponse;
+import com.massimotter.weave.backend.model.calendar.CalendarClientSetupResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarEventResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarEventsResponse;
 import com.massimotter.weave.backend.model.calendar.CreateCalendarEventRequest;
@@ -60,6 +61,14 @@ public class CalendarController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             OffsetDateTime to) {
         return calendarFacadeService.list(from, to);
+    }
+
+    @GetMapping("/api/calendar/client-setup")
+    @Operation(summary = "Describe native calendar client setup options")
+    @ApiResponse(responseCode = "200", description = "Secret-free native calendar client setup metadata.",
+            content = @Content(schema = @Schema(implementation = CalendarClientSetupResponse.class)))
+    public CalendarClientSetupResponse clientSetup() {
+        return calendarFacadeService.clientSetup();
     }
 
     @PostMapping("/api/calendar/events")

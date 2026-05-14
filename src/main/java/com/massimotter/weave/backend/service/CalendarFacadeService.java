@@ -1,30 +1,50 @@
 package com.massimotter.weave.backend.service;
 
 import com.massimotter.weave.backend.exception.ApiErrorException;
+import com.massimotter.weave.backend.model.calendar.CalendarClientSetupOptionResponse;
+import com.massimotter.weave.backend.model.calendar.CalendarClientSetupResponse;
+import com.massimotter.weave.backend.model.calendar.CalendarExternalEndpointsResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarEventResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarEventsResponse;
+import com.massimotter.weave.backend.model.calendar.CalendarScopeResponse;
 import com.massimotter.weave.backend.model.calendar.CreateCalendarEventRequest;
 import com.massimotter.weave.backend.model.calendar.UpdateCalendarEventRequest;
 import com.massimotter.weave.backend.service.calendar.CalendarAdapter;
 import com.massimotter.weave.backend.service.calendar.CalendarAdapterException;
 import com.massimotter.weave.backend.service.calendar.CalendarPrincipal;
+import java.net.URI;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 public class CalendarFacadeService {
 
     private final ObjectProvider<CalendarAdapter> calendarAdapterProvider;
+    private final String nextcloudBaseUrl;
 
     public CalendarFacadeService(ObjectProvider<CalendarAdapter> calendarAdapterProvider) {
+        this(calendarAdapterProvider, "https://files.weave.local");
+    }
+
+    @Autowired
+    public CalendarFacadeService(
+            ObjectProvider<CalendarAdapter> calendarAdapterProvider,
+            @Value("${weave.platform.nextcloud-base-url:https://files.weave.local}") String nextcloudBaseUrl) {
         this.calendarAdapterProvider = calendarAdapterProvider;
+        this.nextcloudBaseUrl = nextcloudBaseUrl == null || nextcloudBaseUrl.isBlank()
+                ? "https://files.weave.local"
+                : nextcloudBaseUrl.trim();
     }
 
     public CalendarEventsResponse list(OffsetDateTime from, OffsetDateTime to) {
@@ -58,6 +78,62 @@ public class CalendarFacadeService {
         } catch (CalendarAdapterException exception) {
             throw apiError(exception, "delete-event");
         }
+    }
+
+    public CalendarClientSetupResponse clientSetup() {
+        CalendarPrincipal principal = principal();
+        String username = principal.nextcloudUserId();
+        String discoveryUrl = davUrl("remote.php", "dav");
+        String principalUrl = davUrl("remote.php", "dav", "principals", "users", username) + "/";
+        String davx5Url = davx5Url();
+
+        return new CalendarClientSetupResponse(
+                CalendarScopeResponse.workspace(),
+                username,
+                new CalendarExternalEndpointsResponse(nextcloudBaseUrl, discoveryUrl, principalUrl),
+                "The backend never returns Nextcloud passwords, app passwords, bearer tokens, or static profile secrets. "
+                        + "External clients must use a revocable per-client app password/login flow now, or a future "
+                        + "Weave-issued scoped setup token once implemented.",
+                List.of(
+                        new CalendarClientSetupOptionResponse(
+                                "apple",
+                                "mobileconfig",
+                                false,
+                                null,
+                                "Signed .mobileconfig generation and revocable per-client credentials are not implemented yet.",
+                                List.of(
+                                        "iOS, iPadOS, and macOS can install a CalDAV configuration profile with host, port, SSL, principal URL, and username.",
+                                        "Release 2 must not embed a permanent password or backend service credential in the profile.",
+                                        "The safe target is a signed profile that omits the password or uses a revocable scoped token.")),
+                        new CalendarClientSetupOptionResponse(
+                                "android",
+                                "davx5",
+                                true,
+                                davx5Url,
+                                null,
+                                List.of(
+                                        "Android has no universal native CalDAV account profile equivalent.",
+                                        "DAVx5 can open a secret-free davx5:// setup URL and can use the Nextcloud login flow for per-client credentials.",
+                                        "Webcal/ICS subscriptions are read-only and should remain a separate fallback.")),
+                        new CalendarClientSetupOptionResponse(
+                                "desktop",
+                                "caldav-manual",
+                                true,
+                                discoveryUrl,
+                                null,
+                                List.of(
+                                        "Use the CalDAV discovery or principal URL in clients such as Thunderbird, Apple Calendar, GNOME, or KDE calendar apps.",
+                                        "Microsoft Outlook generally needs an add-in for CalDAV; read-only ICS/webcal can be offered later where acceptable.",
+                                        "Use username " + username + " with a revocable per-client app password/login-flow credential.")),
+                        new CalendarClientSetupOptionResponse(
+                                "subscription",
+                                "webcal-ics",
+                                false,
+                                null,
+                                "A revocable read-only ICS/webcal feed token is not implemented yet.",
+                                List.of(
+                                        "ICS/webcal is one-way subscription/download, not full two-way CalDAV sync.",
+                                        "It is useful for clients without CalDAV support once scoped feed tokens and revocation are available."))));
     }
 
     private CalendarAdapter adapter(String operation) {
@@ -151,5 +227,20 @@ public class CalendarFacadeService {
             return preferred;
         }
         return fallback;
+    }
+
+    private String davUrl(String... pathSegments) {
+        return UriComponentsBuilder.fromUriString(nextcloudBaseUrl)
+                .pathSegment(pathSegments)
+                .build()
+                .toUriString();
+    }
+
+    private String davx5Url() {
+        URI uri = URI.create(nextcloudBaseUrl);
+        String host = uri.getHost() == null ? "files.weave.local" : uri.getHost();
+        int port = uri.getPort();
+        String authority = port > 0 ? host + ":" + port : host;
+        return "davx5://" + authority + "/remote.php/dav";
     }
 }
