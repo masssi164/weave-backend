@@ -7,6 +7,10 @@ import java.util.List;
 public record CalendarClientSetupResponse(
         @Schema(description = "Calendar ownership scope exposed by the Weave calendar facade.")
         CalendarScopeResponse scope,
+        @Schema(description = "Explicit product/private/external-client access model.")
+        CalendarAccessModelResponse accessModel,
+        @Schema(description = "Safety readiness for profile generation and tokenized subscription paths.")
+        CalendarCredentialReadinessResponse credentialReadiness,
         @Schema(description = "Authenticated user's external calendar account identifier.", example = "maria")
         String username,
         @Schema(description = "CalDAV/WebDAV discovery URLs that may be shown to the user without credentials.")

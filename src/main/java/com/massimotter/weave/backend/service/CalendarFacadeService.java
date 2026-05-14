@@ -1,8 +1,10 @@
 package com.massimotter.weave.backend.service;
 
 import com.massimotter.weave.backend.exception.ApiErrorException;
+import com.massimotter.weave.backend.model.calendar.CalendarAccessModelResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarClientSetupOptionResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarClientSetupResponse;
+import com.massimotter.weave.backend.model.calendar.CalendarCredentialReadinessResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarExternalEndpointsResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarEventResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarEventsResponse;
@@ -89,6 +91,8 @@ public class CalendarFacadeService {
 
         return new CalendarClientSetupResponse(
                 CalendarScopeResponse.workspace(),
+                accessModel(),
+                credentialReadiness(),
                 username,
                 new CalendarExternalEndpointsResponse(nextcloudBaseUrl, discoveryUrl, principalUrl),
                 "The backend never returns Nextcloud passwords, app passwords, bearer tokens, or static profile secrets. "
@@ -134,6 +138,33 @@ public class CalendarFacadeService {
                                 List.of(
                                         "ICS/webcal is one-way subscription/download, not full two-way CalDAV sync.",
                                         "It is useful for clients without CalDAV support once scoped feed tokens and revocation are available."))));
+    }
+
+    private CalendarAccessModelResponse accessModel() {
+        return new CalendarAccessModelResponse(
+                "workspace-calendar",
+                "workspace",
+                false,
+                "Private per-user CalDAV calendars are not exposed until provisioning, sharing, or delegated-token access is specified and tested.",
+                "external clients use user-owned revocable per-client credentials; backend actor credentials are never issued to clients",
+                List.of(
+                        "The product calendar facade currently serves the Weave-managed workspace calendar scope.",
+                        "Backend CalDAV configuration that targets arbitrary private user calendars must stay fail-closed.",
+                        "External clients may use CalDAV discovery URLs, but credentials must come from a user-controlled revocable flow."));
+    }
+
+    private CalendarCredentialReadinessResponse credentialReadiness() {
+        return new CalendarCredentialReadinessResponse(
+                "blocked_until_revocable_credentials",
+                false,
+                false,
+                false,
+                false,
+                false,
+                List.of(
+                        "Signed Apple .mobileconfig generation is not implemented yet.",
+                        "Weave-issued revocable per-client CalDAV credentials are not implemented yet.",
+                        "Read-only ICS/webcal feed tokens are not implemented yet."));
     }
 
     private CalendarAdapter adapter(String operation) {
