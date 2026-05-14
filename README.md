@@ -18,6 +18,7 @@ Release 1 is an early operator-facing slice, not the full Teams/Slack migration 
 - workspace capability and release-readiness snapshots at `/api/workspace/capabilities` and `/api/workspace/release-readiness`
 - Nextcloud-backed Files facade endpoints when a backend-owned actor is configured; otherwise they fail closed
 - Calendar facade endpoints mapped to the backend actor's Nextcloud CalDAV workspace calendar when configured; unsafe private-user calendar templates fail closed
+- secret-free Calendar client setup metadata at `GET /api/calendar/client-setup` for Release 2 profile/download planning; it does not return credentials or generate profiles yet
 - OpenAPI JSON at `/v3/api-docs`
 - Actuator health/info endpoints, Gradle wrapper, Dockerfile, and GitHub Actions CI
 
@@ -46,6 +47,7 @@ Avoid using it to replace standards-based native flows by default:
 - `src/test/java/...`: contract and service tests for auth, profiles, readiness, files, and calendar behavior.
 - `docs/runtime-configuration.md`: complete environment-variable reference and fail-closed adapter behavior.
 - `docs/release-operations.md`: Release 1 API operations guide and minimum operator checks.
+- `docs/calendar-client-setup.md`: Release 2 research and phased plan for Apple `.mobileconfig`, Android DAVx5, desktop CalDAV, and read-only webcal/ICS setup.
 - `docs/architecture-alignment.md`: cross-repo responsibility split for app, backend, and infrastructure.
 - `docs/boards-preview-contract.md`: hidden, post-Release-1 Boards/Tasks provider-neutral contract notes; not a Product screenshots or Release 1 surface.
 - `docs/issues/`: historical alignment issue drafts.

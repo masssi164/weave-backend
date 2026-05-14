@@ -47,6 +47,7 @@ class OpenApiDocumentationTest {
                 .andExpect(jsonPath("$.paths['/api/files/{id}/download']").exists())
                 .andExpect(jsonPath("$.paths['/api/files/{id}']").exists())
                 .andExpect(jsonPath("$.paths['/api/calendar/events']").exists())
+                .andExpect(jsonPath("$.paths['/api/calendar/client-setup']").exists())
                 .andExpect(jsonPath("$.paths['/api/calendar/events/{id}']").exists())
                 .andExpect(jsonPath("$.paths['/api/workspace/capabilities']").exists())
                 .andExpect(jsonPath("$.paths['/api/workspace/release-readiness']").exists())
