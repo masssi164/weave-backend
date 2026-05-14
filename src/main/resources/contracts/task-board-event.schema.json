@@ -60,6 +60,7 @@
     },
     "payload": {
       "type": "object",
+      "description": "Provider-neutral, redacted activity details. Normalized payloads may include sourceProvider, sourceEventId, eventType, changed field identifiers, ordering/cursor hints, and support-safe conflict details.",
       "additionalProperties": true
     }
   },
