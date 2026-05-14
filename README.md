@@ -2,13 +2,13 @@
 
 [![CI](https://github.com/masssi164/weave-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/masssi164/weave-backend/actions/workflows/ci.yml)
 
-`weave-backend` is the Spring Boot product API for Weave. It keeps Release 1 client contracts small, supportable, and privacy-preserving while the stack grows from a self-hosted collaboration base toward the broader Weave vision: accessible workspaces, open operator control, data sovereignty, and future Weaver personal-assistant workflows, agents, and connectors.
+`weave-backend` is the Spring Boot product API for Weave. It keeps Release 1 client contracts small and supportable, avoids pushing backend-owned secrets or raw downstream protocols into clients, and leaves room for the broader Weave vision: accessible workspaces, open operator control, data sovereignty, and a future Weaver intelligence layer for assistants, agents, automation, and connectors.
 
 The backend is intentionally **not** a generic proxy for Matrix, Nextcloud, or Keycloak. Flutter can use native OIDC/PKCE and Matrix client flows where that is the right protocol boundary. This service owns the workflows that benefit from a server-side product layer: normalized Weave APIs, stable error envelopes, release-readiness checks, backend-owned integrations, and orchestration that should not live in the app.
 
 ## Release 1 scope
 
-Release 1 is a first customer/operator-facing slice, not the full Teams/Slack migration story yet. The backend currently provides:
+Release 1 is an early operator-facing slice, not the full Teams/Slack migration story yet. The backend currently provides:
 
 - public health and platform bootstrap endpoints for gateway and smoke checks
 - first-party JWT issuer, audience, client, and `weave:workspace` scope validation
@@ -21,7 +21,7 @@ Release 1 is a first customer/operator-facing slice, not the full Teams/Slack mi
 - OpenAPI JSON at `/v3/api-docs`
 - Actuator health/info endpoints, Gradle wrapper, Dockerfile, and GitHub Actions CI
 
-Release 1 does **not** claim a complete Teams/Slack replacement, end-user credential brokering, full Matrix/Nextcloud provisioning automation, recurrence-rich calendar UX, sharing/move policy, or Weaver PA/agent/connectors. Those remain product-roadmap items behind explicit contracts.
+Release 1 does **not** claim a complete Teams/Slack replacement, end-user credential brokering, full Matrix/Nextcloud provisioning automation, recurrence-rich calendar UX, sharing/move policy, or the future Weaver intelligence layer. Those remain product-roadmap items behind explicit contracts.
 
 ## Product boundary
 
