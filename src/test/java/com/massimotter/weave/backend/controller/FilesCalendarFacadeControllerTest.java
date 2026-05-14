@@ -123,6 +123,27 @@ class FilesCalendarFacadeControllerTest {
                 .andExpect(jsonPath("$.options[3].available").value(false));
     }
 
+
+    @Test
+    void calendarAppleProfileRequiresAuthenticatedWorkspaceScope() throws Exception {
+        mockMvc.perform(get("/api/calendar/client-setup/apple.mobileconfig"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("unauthorized"));
+    }
+
+    @Test
+    void calendarAppleProfileDownloadStaysFailClosedUntilSigningExists() throws Exception {
+        mockMvc.perform(get("/api/calendar/client-setup/apple.mobileconfig")
+                        .with(workspaceJwt()))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(header().exists("X-Request-Id"))
+                .andExpect(jsonPath("$.code").value("calendar-apple-profile-unavailable"))
+                .andExpect(jsonPath("$.details.operation").value("download-apple-mobileconfig"))
+                .andExpect(jsonPath("$.details.requiresSignedProfile").value(true))
+                .andExpect(jsonPath("$.details.passwordIncluded").value(false))
+                .andExpect(jsonPath("$.details.backendActorCredentialsExposed").value(false));
+    }
+
     @Test
     void facadeRequestsUseStableValidationEnvelope() throws Exception {
         String invalidEvent = """

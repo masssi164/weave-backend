@@ -66,12 +66,18 @@ Release 2 implications:
 
 This endpoint is intentionally not a profile generator yet. It creates the contract surface the app can show in a Release 2 profile/calendar-settings screen while keeping unsafe paths closed.
 
+## Backend profile endpoint scaffold
+
+`GET /api/calendar/client-setup/apple.mobileconfig` is now reserved for Apple profile downloads. It is authenticated through the same `weave:workspace` API boundary, but it intentionally returns `503 calendar-apple-profile-unavailable` until real profile signing is wired. The backend keeps an unsigned, no-secret profile renderer under test so the eventual signer has a stable input artifact, but unsigned profiles are not downloadable from the API.
+
+The renderer includes only CalDAV host, port, SSL, principal URL, display label, username, and profile metadata. It deliberately omits `CalDAVPassword` and never reads backend actor credentials, bearer tokens, or static setup secrets. Password-bearing profiles remain blocked until a revocable per-client credential issuance and revocation model exists.
+
 ## Release 2 implementation sequence
 
 1. **Contract and setup metadata (this PR):** expose `/api/calendar/client-setup` and document the platform/security model.
 2. **Access/credential readiness contract:** expose explicit access-model and credential-readiness fields so clients can show honest blocked states before any profile/feed download path exists. Keep `{user}` CalDAV templates fail-closed until tested.
 3. **Private/user calendar access model:** resolve `weave-backend#52` by choosing service-shared workspace calendar + optional per-user sharing, Nextcloud Login Flow/app passwords, or a Weave token bridge.
-4. **Apple profile generator:** add a signed `.mobileconfig` download endpoint that omits passwords or uses revocable scoped credentials only. Add tests proving no backend actor credential can appear in the profile.
+4. **Apple profile generator:** keep the authenticated `.mobileconfig` endpoint fail-closed until profile signing is configured; then serve the tested no-secret profile through a signer, or include only a revocable scoped credential once issuance/revocation exists. Add tests proving no backend actor credential can appear in the profile.
 5. **Android setup handoff:** add app/UI support for DAVx5 setup URI, manual fallback instructions, and read-only subscription copy once tokenized ICS exists.
 6. **Read-only subscription tokens:** implement revocable webcal/ICS feed tokens for clients that cannot do CalDAV; label them one-way.
 7. **Calendar product promotion:** once create/read/update/delete and profile setup are safe, enable Calendar as a Release 2 module in app capability/navigation tests.
