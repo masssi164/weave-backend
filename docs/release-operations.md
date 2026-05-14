@@ -25,6 +25,8 @@ Optional:
 - `WEAVE_PROFILE_STORAGE_PATH`: durable JSON file path for mutable profile overrides accepted by `PATCH /api/profile`, defaults to `./data/profile-overrides.json`
 - `PORT`: HTTP listen port, defaults to `8080`
 
+For the complete environment-variable reference, including Files/Calendar adapter credentials and capability toggles, see [runtime-configuration.md](runtime-configuration.md).
+
 ## Local/dev public contract
 
 The backend's canonical local/dev API base is `https://api.weave.local/api`. The product shell remains `https://weave.local`.
