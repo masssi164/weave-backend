@@ -21,7 +21,7 @@ Release 1 is an early operator-facing slice, not the full Teams/Slack migration 
 - OpenAPI JSON at `/v3/api-docs`
 - Actuator health/info endpoints, Gradle wrapper, Dockerfile, and GitHub Actions CI
 
-Release 1 does **not** claim a complete Teams/Slack replacement, end-user credential brokering, full Matrix/Nextcloud provisioning automation, recurrence-rich calendar UX, sharing/move policy, or the future Weaver intelligence layer. Those remain product-roadmap items behind explicit contracts.
+Release 1 does **not** claim a complete Teams/Slack replacement, end-user credential brokering, full Matrix/Nextcloud provisioning automation, recurrence-rich calendar UX, sharing/move policy, Boards/Tasks product navigation, or the future Weaver intelligence layer. Those remain product-roadmap items behind explicit contracts. The hidden Boards/Tasks preview contract is documented separately in [docs/boards-preview-contract.md](docs/boards-preview-contract.md) and must not be treated as a Release 1 enabled surface.
 
 ## Product boundary
 
@@ -47,6 +47,7 @@ Avoid using it to replace standards-based native flows by default:
 - `docs/runtime-configuration.md`: complete environment-variable reference and fail-closed adapter behavior.
 - `docs/release-operations.md`: Release 1 API operations guide and minimum operator checks.
 - `docs/architecture-alignment.md`: cross-repo responsibility split for app, backend, and infrastructure.
+- `docs/boards-preview-contract.md`: hidden, post-Release-1 Boards/Tasks provider-neutral contract notes; not a Product screenshots or Release 1 surface.
 - `docs/issues/`: historical alignment issue drafts.
 
 ## Quick start

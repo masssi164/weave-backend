@@ -1,0 +1,124 @@
+package com.massimotter.weave.backend.boards;
+
+import com.massimotter.weave.backend.boards.domain.BoardCapability;
+import com.massimotter.weave.backend.boards.domain.EventRedactionLevel;
+import com.massimotter.weave.backend.boards.domain.ProviderKind;
+import com.massimotter.weave.backend.boards.domain.TaskBoardEvent;
+import com.massimotter.weave.backend.boards.domain.TaskBoardEventType;
+import com.massimotter.weave.backend.boards.port.BoardsPreviewGuard;
+import com.massimotter.weave.backend.boards.port.NoopTaskBoardEventPublisher;
+import com.massimotter.weave.backend.boards.support.BoardsErrorCode;
+import com.massimotter.weave.backend.boards.support.BoardsException;
+import com.massimotter.weave.backend.boards.vikunja.VikunjaBoardsRepository;
+import org.junit.jupiter.api.Test;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+class BoardsPreviewContractTest {
+
+    @Test
+    void previewGuardFailsClosedWhenBoardsAreNotEnabled() {
+        var guard = new BoardsPreviewGuard(false);
+
+        assertThat(guard.enabled()).isFalse();
+        assertThatThrownBy(guard::requireEnabled)
+                .isInstanceOf(BoardsException.class)
+                .satisfies(error -> assertThat(((BoardsException) error).code())
+                        .isEqualTo(BoardsErrorCode.PROVIDER_UNAVAILABLE))
+                .hasMessageContaining("hidden preview module")
+                .hasMessageContaining("Release 1");
+    }
+
+    @Test
+    void vikunjaRepositoryAdvertisesBoundaryCapabilitiesButStaysDisabled() {
+        var repository = new VikunjaBoardsRepository();
+
+        var capabilities = repository.capabilities();
+
+        assertThat(capabilities.provider()).isEqualTo(ProviderKind.VIKUNJA);
+        assertThat(capabilities.enabled()).isFalse();
+        assertThat(capabilities.supported()).contains(
+                BoardCapability.COMMENTS,
+                BoardCapability.ATTACHMENTS,
+                BoardCapability.NON_DESTRUCTIVE_ARCHIVE,
+                BoardCapability.WEBHOOK_EVENTS,
+                BoardCapability.INCREMENTAL_SYNC,
+                BoardCapability.CHECKLISTS,
+                BoardCapability.ACCESSIBLE_NON_DRAG_MOVES);
+        assertThat(capabilities.unsupported()).contains(BoardCapability.CUSTOM_FIELDS);
+        assertThatThrownBy(() -> repository.listProjects(null))
+                .isInstanceOf(BoardsException.class)
+                .satisfies(error -> assertThat(((BoardsException) error).code())
+                        .isEqualTo(BoardsErrorCode.PROVIDER_UNAVAILABLE))
+                .hasMessageContaining("preview-only")
+                .hasMessageContaining("disabled");
+    }
+
+    @Test
+    void allSpecEventTypesRemainRepresentedInTheJavaContract() {
+        assertThat(Arrays.stream(TaskBoardEventType.values()).map(TaskBoardEventType::contractName))
+                .containsExactlyInAnyOrder(
+                        "task.created",
+                        "task.updated",
+                        "task.completed",
+                        "task.archived",
+                        "task.moved",
+                        "assignment.changed",
+                        "label.changed",
+                        "priority.changed",
+                        "due_date.changed",
+                        "comment.added",
+                        "attachment.changed",
+                        "sync.conflict_detected");
+    }
+
+    @Test
+    void noopPublisherValidatesEventEnvelopeWithoutEnablingRuntimePublication() {
+        var publisher = new NoopTaskBoardEventPublisher();
+        var event = new TaskBoardEvent(
+                "task-99:moved:2026-05-14T10:00:00Z",
+                TaskBoardEventType.TASK_MOVED,
+                "user:alice",
+                Instant.parse("2026-05-14T10:00:00Z"),
+                "workspace:weave",
+                "project:launch",
+                "board:launch",
+                "task:99",
+                null,
+                EventRedactionLevel.SUPPORT_SAFE,
+                Map.of("fromColumnId", "column:todo", "toColumnId", "column:doing"));
+
+        assertThatCode(() -> publisher.publish(event)).doesNotThrowAnyException();
+        assertThatThrownBy(() -> publisher.publish(null)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void previewOpenApiContractDeclaresNoRoutes() throws Exception {
+        String contract = Files.readString(Path.of("src/main/resources/contracts/boards-preview.openapi.yaml"));
+
+        assertThat(contract).contains("title: Weave Boards/Tasks Preview Contract");
+        assertThat(contract).contains("paths: {}");
+        assertThat(contract).contains("TaskBoardEvent");
+        assertThat(contract).contains("task.moved");
+    }
+
+    @Test
+    void eventJsonSchemaIsPreviewOnlyAndContainsProviderNeutralTypes() throws Exception {
+        String schema = Files.readString(Path.of("src/main/resources/contracts/task-board-event.schema.json"));
+
+        assertThat(schema).contains("Preview-only normalized Boards/Tasks event envelope");
+        assertThat(schema).contains("task.created");
+        assertThat(schema).contains("sync.conflict_detected");
+        assertThat(schema).contains("vikunja");
+        assertThat(schema).contains("openproject");
+        assertThat(schema).contains("nextcloud-deck");
+    }
+}
