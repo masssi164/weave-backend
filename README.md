@@ -1,151 +1,63 @@
 # Weave Backend
 
-`weave-backend` is the Spring Boot backend for the Weave product family.
+[![CI](https://github.com/masssi164/weave-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/masssi164/weave-backend/actions/workflows/ci.yml)
 
-The backend should act as a product API and orchestration layer, not as a blind proxy for every end-user call to Matrix, Nextcloud, or Keycloak. Flutter may own native OIDC/PKCE sign-in and Matrix client protocol flows, but MVP product Files and Calendar flows go through this backend at the canonical `/api` surface instead of direct Flutter-to-Nextcloud WebDAV/OCS/CalDAV calls. This repository should own the server-side workflows that actually benefit from a backend:
+`weave-backend` is the Spring Boot product API for Weave. It keeps Release 1 client contracts small, supportable, and privacy-preserving while the stack grows from a self-hosted collaboration base toward the broader Weave vision: accessible workspaces, open operator control, data sovereignty, and future Weaver personal-assistant workflows, agents, and connectors.
 
-- validating access tokens from Weave clients
-- exposing product-specific REST APIs and normalized errors
-- exposing Files and Calendar facade contracts, with Files backed by a fail-closed Nextcloud WebDAV adapter when backend-owned actor credentials are configured
-- orchestrating server-owned workflows across Keycloak, Matrix, and Nextcloud
-- running automation, provisioning, and background jobs
+The backend is intentionally **not** a generic proxy for Matrix, Nextcloud, or Keycloak. Flutter can use native OIDC/PKCE and Matrix client flows where that is the right protocol boundary. This service owns the workflows that benefit from a server-side product layer: normalized Weave APIs, stable error envelopes, release-readiness checks, backend-owned integrations, and orchestration that should not live in the app.
 
-## Current baseline
+## Release 1 scope
 
-This repository now starts as a JWT-protected Spring Boot API with:
+Release 1 is a first customer/operator-facing slice, not the full Teams/Slack migration story yet. The backend currently provides:
 
-- `/api/health/live` and `/api/health/ready` endpoints for gateway and smoke checks
-- `/api/platform/config` and `/api/platform/status` endpoints for client bootstrap and diagnostics, including canonical `matrixHomeserverUrl` and `nextcloudBaseUrl` fields
-- a canonical `/api/me` endpoint for profile claim inspection and client/backend contract testing
-- authenticated product profile facade endpoints at `GET /api/profile`, `PATCH /api/profile`, and `GET /api/profile/sync-status`
-- `/api/onboarding/status` for authenticated first-run invite, role/group, profile, Matrix, and Nextcloud provisioning status
-- `/api/workspace/capabilities` and compatibility `/api/v1/workspace/capabilities` endpoints for the first backend-owned client contract
-- `/api/workspace/release-readiness` and compatibility `/api/v1/workspace/release-readiness` endpoints for operator-facing Release 1 setup status and remaining actions
-- authenticated Files facade endpoints at `/api/files`, `/api/files/upload`, `/api/files/folders`, `/api/files/{id}/download`, and `/api/files/{id}` backed by Nextcloud WebDAV when configured
-- authenticated Calendar facade endpoints at `/api/calendar/events` and `/api/calendar/events/{id}`
-- OpenAPI JSON published at `/v3/api-docs`
-- actuator health and info endpoints
-- first-party JWT issuer, audience, client, and workspace-scope validation
-- Gradle wrapper and GitHub Actions CI
-- issue-ready alignment drafts for `weave`, `weave-infra`, and `weave-backend`
+- public health and platform bootstrap endpoints for gateway and smoke checks
+- first-party JWT issuer, audience, client, and `weave:workspace` scope validation
+- a stable `/api/me` caller snapshot for contract testing
+- product profile facade endpoints at `GET /api/profile`, `PATCH /api/profile`, and `GET /api/profile/sync-status`
+- first-run onboarding status at `/api/onboarding/status`
+- workspace capability and release-readiness snapshots at `/api/workspace/capabilities` and `/api/workspace/release-readiness`
+- Nextcloud-backed Files facade endpoints when a backend-owned actor is configured; otherwise they fail closed
+- Calendar facade endpoints mapped to Nextcloud CalDAV when backend actor credentials are configured; otherwise they fail closed
+- OpenAPI JSON at `/v3/api-docs`
+- Actuator health/info endpoints, Gradle wrapper, Dockerfile, and GitHub Actions CI
 
-## Non-goals
+Release 1 does **not** claim a complete Teams/Slack replacement, end-user credential brokering, full Matrix/Nextcloud provisioning automation, recurrence-rich calendar UX, sharing/move policy, or Weaver PA/agent/connectors. Those remain product-roadmap items behind explicit contracts.
 
-The backend should not, by default:
+## Product boundary
 
-- replace Matrix Native OAuth 2.0 with a custom server-side login proxy
-- assume a mobile OIDC bearer token can be reused as a Matrix access token
-- make direct Flutter-to-Nextcloud WebDAV/OCS/CalDAV calls the default MVP Files or Calendar product contract
+Use the backend when Weave needs one of these guarantees:
 
-## Configuration
+- validate first-party Weave access tokens and workspace scope
+- expose product-specific REST APIs rather than raw downstream protocols
+- normalize errors, request ids, and readiness signals for clients and operators
+- orchestrate server-owned workflows across identity, chat, files, and calendar
+- keep backend-owned service credentials out of apps and logs
 
-Required runtime variables:
+Avoid using it to replace standards-based native flows by default:
 
-- `WEAVE_OIDC_ISSUER_URI`: public issuer URI for the Keycloak realm used by Weave; canonical local/dev value is `https://auth.weave.local/realms/weave`
+- no custom server-side login proxy in front of Matrix Native OAuth 2.0
+- no assumption that a mobile OIDC bearer token can be reused as a Matrix access token
+- no direct Flutter-to-Nextcloud WebDAV/OCS/CalDAV contract as the default Release 1 product API
 
-Optional runtime variables:
+## Repo compass
 
-- `WEAVE_OIDC_JWK_SET_URI`: internal JWKS URL for backend key discovery when it differs from the public issuer metadata route
-- `WEAVE_OIDC_REQUIRED_AUDIENCE`: audience required in access tokens, defaults to `weave-app`
-- `WEAVE_CLIENT_ID`: first-party Weave app client ID required in `azp` and/or `client_id`, defaults to `weave-app`
-- `WEAVE_WORKSPACE_SHELL_ACCESS_ENABLED`: enable the authenticated shell contract, defaults to `true`
-- `WEAVE_WORKSPACE_CHAT_ENABLED`: enable chat in the workspace snapshot, defaults to `true`
-- `WEAVE_MATRIX_HOMESERVER_URL`: public Matrix base URL used by chat auto-readiness
-- `WEAVE_WORKSPACE_CHAT_READINESS`: optional explicit chat readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
-- `WEAVE_WORKSPACE_FILES_ENABLED`: enable files in the workspace snapshot, defaults to `true`
-- `WEAVE_NEXTCLOUD_BASE_URL`: canonical Nextcloud URL used by files auto-readiness and the backend Files adapter
-- `WEAVE_WORKSPACE_FILES_READINESS`: optional explicit files readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
-- `WEAVE_WORKSPACE_CALENDAR_ENABLED`: enable the calendar capability, defaults to `false`
-- `WEAVE_WORKSPACE_CALENDAR_READINESS`: optional explicit calendar readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
-- `WEAVE_CALDAV_BASE_URL`: Nextcloud origin used only by the backend CalDAV adapter, defaults to `WEAVE_NEXTCLOUD_BASE_URL` / `https://files.weave.local`
-- `WEAVE_CALDAV_CALENDAR_PATH_TEMPLATE`: CalDAV calendar collection template, defaults to `/remote.php/dav/calendars/{user}/personal/`; `{user}` is derived from the authenticated Weave token `preferred_username` claim, falling back to `sub`
-- `WEAVE_CALDAV_AUTH_MODE`: backend actor credential mode (`BASIC` or `BEARER`), defaults to `BASIC`
-- `WEAVE_CALDAV_BACKEND_USERNAME`: backend actor username for Basic auth; required with `BASIC`
-- `WEAVE_CALDAV_BACKEND_TOKEN`: backend actor app password/token or bearer token; required for the CalDAV adapter to call Nextcloud
-- `WEAVE_CALDAV_REQUEST_TIMEOUT_SECONDS`: CalDAV request timeout, defaults to `10`
-- `WEAVE_WORKSPACE_BOARDS_ENABLED`: enable the boards capability, defaults to `false`
-- `WEAVE_WORKSPACE_BOARDS_READINESS`: optional explicit boards readiness override (`ready`, `degraded`, `blocked`, `unavailable`)
-- `WEAVE_ONBOARDING_MATRIX_PROVISIONING_STATE`: optional first-run Matrix provisioning override (`not_configured`, `pending`, `ready`, `degraded`, `failed`); blank derives status from the chat capability
-- `WEAVE_ONBOARDING_NEXTCLOUD_PROVISIONING_STATE`: optional first-run Nextcloud provisioning override (`not_configured`, `pending`, `ready`, `degraded`, `failed`); blank derives status from files/calendar capability and Nextcloud route configuration
-- `WEAVE_PROFILE_STORAGE_PATH`: durable JSON file path for mutable `PATCH /api/profile` overrides, defaults to `./data/profile-overrides.json`
-- `WEAVE_PUBLIC_BASE_URL`: public product entrypoint, defaults to `https://weave.local`
-- `WEAVE_API_BASE_URL`: public backend API base URL, defaults to `https://api.weave.local/api`
-- `WEAVE_AUTH_BASE_URL`: public Keycloak base URL, defaults to `https://auth.weave.local`
-- `WEAVE_MATRIX_HOMESERVER_URL`: public Matrix homeserver URL, defaults to `https://matrix.weave.local`
-- `WEAVE_FILES_PRODUCT_URL`: public files product surface, defaults to `https://weave.local/files`
-- `WEAVE_CALENDAR_PRODUCT_URL`: public calendar product surface, defaults to `https://weave.local/calendar`
-- `WEAVE_NEXTCLOUD_BASE_URL`: canonical Nextcloud URL, defaults to `https://files.weave.local`
-- `WEAVE_NEXTCLOUD_FILES_ACTOR_MODEL`: backend-to-Nextcloud token model, currently only `backend-service-account`; other values fail closed until implemented
-- `WEAVE_NEXTCLOUD_FILES_ACTOR_USERNAME`: backend-owned Nextcloud actor username for WebDAV calls; blank keeps the facade unavailable instead of forwarding caller tokens
-- `WEAVE_NEXTCLOUD_FILES_ACTOR_TOKEN`: backend-owned Nextcloud app password/token for WebDAV calls; blank keeps the facade unavailable
-- `WEAVE_NEXTCLOUD_FILES_APP_PASSWORD`: compatibility alias used when `WEAVE_NEXTCLOUD_FILES_ACTOR_TOKEN` is blank
-- `WEAVE_NEXTCLOUD_FILES_WEBDAV_ROOT_PATH`: Nextcloud WebDAV files root path, defaults to `/remote.php/dav/files`
-- `PORT`: HTTP port, defaults to `8080`
+- `src/main/java/...`: Spring Boot API, auth, product facade, and adapter code.
+- `src/main/resources/application.yml`: runtime defaults and environment-variable bindings.
+- `src/test/java/...`: contract and service tests for auth, profiles, readiness, files, and calendar behavior.
+- `docs/runtime-configuration.md`: complete environment-variable reference and fail-closed adapter behavior.
+- `docs/release-operations.md`: Release 1 API operations guide and minimum operator checks.
+- `docs/architecture-alignment.md`: cross-repo responsibility split for app, backend, and infrastructure.
+- `docs/issues/`: historical alignment issue drafts.
 
-Files adapter behavior:
+## Quick start
 
-- The app never receives raw Nextcloud credentials. The backend uses the configured backend-owned actor for WebDAV calls.
-- If the actor model, username, or token is missing, files endpoints fail closed with `nextcloud-adapter-not-configured`.
-- Implemented WebDAV operations: folder listing with quota when returned by Nextcloud, folder creation, upload, download, and delete.
-- Move/share remain intentionally unsupported until product policy and endpoint contracts are specified.
-- No live Nextcloud integration is implied by unit tests; local/live validation still requires a configured `files.weave.local` and backend actor.
-
-Product profile facade:
-
-- `GET /api/profile`, `PATCH /api/profile`, and `GET /api/profile/sync-status` are protected by the same first-party bearer-token contract as `/api/me`.
-- `PATCH /api/profile` accepts partial updates for mutable product profile fields: `displayName`, `avatar`, `locale`, `timezone`, `accessibilityPreferences`, and `profileVisibility`.
-- Updated profile fields are persisted in the configured backend profile override store and reflected in the backend-owned profile facade and `/api/me` snapshot for the authenticated subject after service/repository recreation.
-- Set `WEAVE_PROFILE_STORAGE_PATH` to a mounted durable path for containerized Release 1 runs; the default local path is `./data/profile-overrides.json`.
-- Profile sync status is frontend-safe and reports Matrix/Nextcloud as `not_configured` until module propagation is implemented.
-
-First-run onboarding status:
-
-- `GET /api/onboarding/status` is protected by the same first-party bearer-token contract as `/api/me`.
-- The response includes identity, roles, groups, invite status, profile completeness, and module provisioning states for `identity`, `profile`, `matrix`, and `nextcloud`.
-- Invite status is derived from trusted token claims (`weave_invite_status` or `invite_status` when present), falling back to email verification state for local/dev seed users.
-- Matrix and Nextcloud provisioning states are frontend-safe `not_configured`, `pending`, `ready`, `degraded`, or `failed` values. They do not include downstream stack traces, tokens, or raw service errors.
-- Owner and admin map to workspace administration/invite authority; member can use workspace modules; guest is treated as restricted for first-run module access.
-
-Workspace capability source of truth:
-
-- `shellAccess` is `unavailable` when disabled, otherwise `ready` only when JWT validation can be enforced with a configured issuer, audience, and first-party client contract.
-- `chat` is configuration-backed. When enabled it follows `WEAVE_WORKSPACE_CHAT_READINESS` if set, otherwise it is `ready` when `WEAVE_MATRIX_HOMESERVER_URL` is configured, `degraded` without that route, and `blocked` if the shell contract itself is blocked.
-- `files` is configuration-backed. When enabled it follows `WEAVE_WORKSPACE_FILES_READINESS` if set, otherwise it is `ready` when `WEAVE_NEXTCLOUD_BASE_URL` is configured, `degraded` without that route, and `blocked` if the shell contract itself is blocked.
-- `calendar` and `boards` stay contract-stable. They are `unavailable` when disabled, and can intentionally advertise another readiness via their explicit override variables when the workspace wants to surface rollout state.
-
-Calendar facade adapter scope:
-
-- `/api/calendar/events` remains the product API. The backend maps list/create/update/delete operations to Nextcloud CalDAV and normalizes CalDAV failures into Weave error codes.
-- The MVP adapter requires an explicitly configured backend actor credential. If `WEAVE_CALDAV_BACKEND_TOKEN` or the Basic username is missing, calendar operations fail closed with `nextcloud-adapter-not-configured` instead of leaking raw CalDAV behavior to clients.
-- Recurrence creation/editing/expansion is intentionally deferred: the current DTO has no RRULE contract, and the adapter does not expose raw recurrence fields. Recurring events returned by CalDAV may appear as their source VEVENT only; full recurrence UX and expansion need a later product/API spec.
-
-See [docs/release-operations.md](docs/release-operations.md) for the Release 1 runtime contract, stable error envelope, and minimum operator checks.
-
-Canonical local/dev public contract:
-
-- Backend API base: `https://api.weave.local/api`.
-- Keycloak issuer: `https://auth.weave.local/realms/weave`.
-- Product shell: `https://weave.local`.
-- Matrix homeserver: `https://matrix.weave.local`.
-- Weave files/calendar product surfaces: `https://weave.local/files` and `https://weave.local/calendar`.
-- Canonical Nextcloud origin: `https://files.weave.local`.
-
-Local first-party token contract:
-
-- `iss` must match `WEAVE_OIDC_ISSUER_URI`.
-- `aud` must include `weave-app` unless `WEAVE_OIDC_REQUIRED_AUDIENCE` overrides it.
-- `azp` and/or `client_id` must be present and must match `weave-app` unless `WEAVE_CLIENT_ID` overrides it.
-- `scope` must include `weave:workspace` for protected `/api/**` routes. Public platform, liveness, and readiness endpoints are unauthenticated.
-
-## Local validation
-
-If Java 17 is installed locally:
+Run tests locally when Java 17 is installed:
 
 ```bash
 ./gradlew test
 ```
 
-If Java is not installed locally, the same command can be run in Docker:
+Or run the same suite in Docker:
 
 ```bash
 docker run --rm \
@@ -158,22 +70,26 @@ docker run --rm \
   ./gradlew test
 ```
 
-To build the local backend image used by `weave-infra` integration runs:
+Build the local backend image used by `weave-infra` integration runs:
 
 ```bash
 docker build -t weave-backend:e2e .
 ```
 
-This Dockerfile-based path is the reproducible local image build for Apple Silicon and other non-x86 hosts.
+## Canonical local/dev contract
 
-## Release-grade API behavior
+- Product shell: `https://weave.local`
+- Backend API base: `https://api.weave.local/api`
+- Keycloak issuer: `https://auth.weave.local/realms/weave`
+- Matrix homeserver: `https://matrix.weave.local`
+- Weave files/calendar product routes: `https://weave.local/files` and `https://weave.local/calendar`
+- Raw Nextcloud technical/admin/protocol fallback: `https://files.weave.local`
 
-- Protected `/api/**` routes return structured JSON for `401` and `403` responses.
-- `401` means the bearer token is missing or fails the first-party Weave token contract.
-- `403` means the caller is authenticated but lacks the `weave:workspace` scope.
-- The stable error envelope is `code`, `message`, `details`, and `requestId`; the response also includes `X-Request-Id`.
-- `/v3/api-docs` publishes the same error schema so app and operator tooling can rely on it.
+Protected `/api/**` routes require a bearer token whose `iss`, `aud`, `azp`/`client_id`, and `scope` match the first-party Weave app contract. Public health, platform config/status, and OpenAPI endpoints are used for bootstrap and diagnostics.
 
-## Architecture alignment
+## Operator notes
 
-See [docs/architecture-alignment.md](docs/architecture-alignment.md) and the issue drafts under [docs/issues](docs/issues).
+- Runtime variables and backend-owned actor credentials are documented in [docs/runtime-configuration.md](docs/runtime-configuration.md).
+- Release 1 readiness, stable auth errors, and minimum smoke checks are documented in [docs/release-operations.md](docs/release-operations.md).
+- Keep issuer/JWKS/client/audience values aligned with the public auth contract exposed to the app.
+- Do not log raw bearer tokens, Nextcloud actor tokens, app passwords, or CalDAV credentials.

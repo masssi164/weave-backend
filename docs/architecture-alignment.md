@@ -69,6 +69,6 @@ The safest first shape is therefore:
 
 Issue-ready drafts live under:
 
-- [docs/issues/weave](/Users/flotterotter/code/weave-backend/docs/issues/weave)
-- [docs/issues/weave-infra](docs/issues/weave-inf)
-- [docs/issues/weave-backend](/Users/flotterotter/code/weave-backend/docs/issues/weave-backend)
+- [docs/issues/weave](issues/weave)
+- [docs/issues/weave-infra](issues/weave-infra)
+- [docs/issues/weave-backend](issues/weave-backend)
