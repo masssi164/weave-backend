@@ -12,9 +12,9 @@ Implemented now:
 - A repository port that hides provider pagination, IDs, vocabulary, and raw errors from callers.
 - A support-safe error vocabulary aligned with the workspace spec.
 - A Vikunja HTTP/status error mapper that converts provider failures into Weave codes without leaking raw provider messages, URLs, or tokens.
-- A no-op event publisher boundary plus preview JSON/OpenAPI schema artifacts under `src/main/resources/contracts/`.
+- A provider-neutral task/board event normalizer, no-op event publisher boundary, and preview JSON/OpenAPI schema artifacts under `src/main/resources/contracts/`.
 - A first Vikunja adapter boundary and mapper that translates Vikunja projects/buckets/tasks into Weave concepts.
-- A fail-closed Vikunja repository placeholder that advertises preview capabilities but does not perform runtime HTTP calls.
+- Fail-closed Vikunja, OpenProject, and Nextcloud Deck repository placeholders that advertise preview/benchmark/bridge capabilities but do not perform runtime HTTP calls.
 
 Not implemented now:
 
@@ -43,6 +43,28 @@ Vikunja is the first strategic adapter boundary because it is lightweight, self-
 - Vikunja task → Weave task item
 
 The repository placeholder fails closed with `provider_unavailable` until a promotion spec defines authentication, HTTP client behavior, persistence/sync expectations, route DTOs, and validation gates. The adapter boundary now also contains the support-safe HTTP/status mapping expected once real Vikunja calls are introduced: unauthorized, forbidden, not found, conflict, validation, rate limit, offline, provider unavailable, and unknown failures are normalized before reaching product/API code.
+
+## Provider spike contracts
+
+The backend preview layer now declares three disabled adapter contracts against the same `BoardsRepository` port:
+
+- `VikunjaBoardsRepository`: first adapter candidate; supports comments, attachments, non-destructive archive, webhooks, incremental sync, checklists, and accessible non-drag move commands in the contract, but is disabled for runtime use.
+- `OpenProjectBoardsRepository`: accessibility/mature-workflow benchmark; declares comments, attachments, non-destructive archive, and custom fields as benchmark capabilities, but is not the first runtime provider.
+- `NextcloudDeckBoardsRepository`: Nextcloud-adjacent bridge/import candidate; declares comments, attachments, and non-destructive archive, but avoids claiming webhooks or incremental sync until tested.
+
+All three fail closed with support-safe `provider_unavailable` errors until a promotion spec defines auth, route DTOs, OpenAPI publication, smoke/E2E coverage, export/backup, and accessibility gates.
+
+## Event normalizer
+
+`TaskBoardEventNormalizer` is the backend-owned preview boundary for provider activity from Vikunja webhooks, OpenProject activity records, Deck polling/ETag changes, or a later connector gateway. It:
+
+- accepts provider draft events through `TaskBoardEventInput`;
+- emits provider-neutral `TaskBoardEvent` envelopes with stable idempotency keys;
+- records provider identity only as support/sync metadata;
+- preserves ordering inputs such as source event id and provider timestamps in payload fields without publishing routes;
+- redacts support-unsafe payload keys such as tokens, secrets, raw messages, credentials, authorisation headers, and provider URLs before support-safe events leave the adapter boundary.
+
+This is still preview-only and has no notification, audit, webhook, or Release 1 runtime publication.
 
 ## Contract artifacts
 
