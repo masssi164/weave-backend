@@ -119,7 +119,7 @@ END:VCALENDAR&#13;
                         SUMMARY:Planning
                         END:VEVENT
                         END:VCALENDAR
-                        """, null);
+                        """, "\"etag-existing\"");
             } else if ("PUT".equals(exchange.getRequestMethod())) {
                 respond(exchange, 201, "", "\"etag-new\"");
             } else if ("DELETE".equals(exchange.getRequestMethod())) {
@@ -138,13 +138,17 @@ END:VCALENDAR&#13;
                 "Europe/Berlin",
                 null,
                 false));
+        var read = adapter.read(principal(), created.id());
         var updated = adapter.update(principal(), created.id(), new UpdateCalendarEventRequest(
                 "Updated", null, null, null, null, null, null, created.etag()));
         adapter.delete(principal(), created.id());
 
-        assertThat(methods).containsExactly("PUT", "GET", "PUT", "DELETE");
+        assertThat(methods).containsExactly("PUT", "GET", "GET", "PUT", "DELETE");
         assertThat(requestBodies.get(0)).contains("SUMMARY:Planning");
-        assertThat(requestBodies.get(2)).contains("SUMMARY:Updated");
+        assertThat(requestBodies.get(3)).contains("SUMMARY:Updated");
+        assertThat(read.title()).isEqualTo("Planning");
+        assertThat(read.etag()).isEqualTo("\"etag-existing\"");
+        assertThat(read.scope().type()).isEqualTo("workspace");
         assertThat(updated.title()).isEqualTo("Updated");
     }
 

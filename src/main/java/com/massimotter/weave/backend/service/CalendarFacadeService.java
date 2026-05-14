@@ -78,6 +78,14 @@ public class CalendarFacadeService {
         }
     }
 
+    public CalendarEventResponse read(String id) {
+        try {
+            return adapter("read-event").read(principal(), id);
+        } catch (CalendarAdapterException exception) {
+            throw apiError(exception, "read-event");
+        }
+    }
+
     public CalendarEventResponse update(String id, UpdateCalendarEventRequest request) {
         try {
             return adapter("update-event").update(principal(), id, request);

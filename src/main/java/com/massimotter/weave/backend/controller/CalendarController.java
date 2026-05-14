@@ -128,6 +128,14 @@ public class CalendarController {
         return calendarFacadeService.create(request);
     }
 
+    @GetMapping("/api/calendar/events/{id}")
+    @Operation(summary = "Read a calendar event")
+    @ApiResponse(responseCode = "200", description = "Calendar event.",
+            content = @Content(schema = @Schema(implementation = CalendarEventResponse.class)))
+    public CalendarEventResponse read(@PathVariable @Size(max = 2048) String id) {
+        return calendarFacadeService.read(id);
+    }
+
     @PatchMapping("/api/calendar/events/{id}")
     @Operation(summary = "Update a calendar event")
     @ApiResponse(responseCode = "200", description = "Updated calendar event.",

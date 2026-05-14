@@ -14,6 +14,8 @@ public interface CalendarAdapter {
     CalendarEventResponse create(CalendarPrincipal principal, CreateCalendarEventRequest request)
             throws CalendarAdapterException;
 
+    CalendarEventResponse read(CalendarPrincipal principal, String id) throws CalendarAdapterException;
+
     CalendarEventResponse update(CalendarPrincipal principal, String id, UpdateCalendarEventRequest request)
             throws CalendarAdapterException;
 
