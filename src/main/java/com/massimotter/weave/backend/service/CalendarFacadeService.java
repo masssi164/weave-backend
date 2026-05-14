@@ -2,6 +2,7 @@ package com.massimotter.weave.backend.service;
 
 import com.massimotter.weave.backend.exception.ApiErrorException;
 import com.massimotter.weave.backend.model.calendar.CalendarAccessModelResponse;
+import com.massimotter.weave.backend.model.calendar.CalendarAccessPolicyResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarClientSetupOptionResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarClientSetupResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarCredentialReadinessResponse;
@@ -9,6 +10,9 @@ import com.massimotter.weave.backend.model.calendar.CalendarExternalEndpointsRes
 import com.massimotter.weave.backend.model.calendar.CalendarEventResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarEventsResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarScopeResponse;
+import com.massimotter.weave.backend.model.calendar.CalendarSetupCredentialListResponse;
+import com.massimotter.weave.backend.model.calendar.CalendarSetupCredentialRequest;
+import com.massimotter.weave.backend.model.calendar.CalendarSetupCredentialResponse;
 import com.massimotter.weave.backend.model.calendar.CreateCalendarEventRequest;
 import com.massimotter.weave.backend.model.calendar.UpdateCalendarEventRequest;
 import com.massimotter.weave.backend.service.calendar.CalendarAdapter;
@@ -18,9 +22,12 @@ import com.massimotter.weave.backend.service.calendar.AppleMobileConfigProfileRe
 import com.massimotter.weave.backend.service.calendar.CalendarPrincipal;
 import java.net.URI;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.ObjectProvider;
@@ -37,6 +44,7 @@ public class CalendarFacadeService {
     private final ObjectProvider<CalendarAdapter> calendarAdapterProvider;
     private final String nextcloudBaseUrl;
     private final AppleMobileConfigProfileRenderer appleProfileRenderer;
+    private final Map<String, CalendarSetupCredentialResponse> setupCredentials = new ConcurrentHashMap<>();
 
     public CalendarFacadeService(ObjectProvider<CalendarAdapter> calendarAdapterProvider) {
         this(calendarAdapterProvider, "https://files.weave.local");
@@ -165,6 +173,72 @@ public class CalendarFacadeService {
                                 "Unsigned profiles are deliberately not downloadable from the authenticated API.")));
     }
 
+    public CalendarAccessPolicyResponse accessPolicy() {
+        return new CalendarAccessPolicyResponse(
+                accessModel(),
+                List.of("workspace-calendar.read", "workspace-calendar.write", "client-setup.metadata"),
+                List.of("private-user-calendar.read", "backend-actor-private-user-calendar.read"),
+                List.of(
+                        "Choose and document a private calendar access model: user sharing/provisioning, Nextcloud Login Flow/app password, delegated token exchange, or a Weave token bridge.",
+                        "Add operator diagnostics proving private calendar templates are explicitly authorized.",
+                        "Add revocation and audit tests before any private user CalDAV endpoint is enabled."),
+                false);
+    }
+
+    public CalendarSetupCredentialListResponse setupCredentials() {
+        CalendarPrincipal principal = principal();
+        return new CalendarSetupCredentialListResponse(setupCredentials.values().stream()
+                .filter(credential -> principal.subject().equals(credential.username()))
+                .sorted(java.util.Comparator.comparing(CalendarSetupCredentialResponse::issuedAt))
+                .toList());
+    }
+
+    public CalendarSetupCredentialResponse createSetupCredential(CalendarSetupCredentialRequest request) {
+        CalendarPrincipal principal = principal();
+        OffsetDateTime issuedAt = OffsetDateTime.now(ZoneOffset.UTC);
+        String id = "cal_setup_" + UUID.randomUUID();
+        CalendarSetupCredentialResponse credential = new CalendarSetupCredentialResponse(
+                id,
+                "active-no-secret-issued",
+                principal.subject(),
+                defaultIfBlank(request.clientType(), "caldav"),
+                defaultIfBlank(request.label(), "Calendar client setup"),
+                issuedAt,
+                issuedAt.plusHours(24),
+                null,
+                false,
+                false,
+                List.of("DELETE /api/calendar/client-setup/credentials/" + id));
+        setupCredentials.put(id, credential);
+        return credential;
+    }
+
+    public CalendarSetupCredentialResponse revokeSetupCredential(String credentialId) {
+        CalendarPrincipal principal = principal();
+        CalendarSetupCredentialResponse current = setupCredentials.get(credentialId);
+        if (current == null || !principal.subject().equals(current.username())) {
+            throw new ApiErrorException(
+                    HttpStatus.NOT_FOUND,
+                    "calendar-setup-credential-not-found",
+                    "Calendar setup credential was not found.",
+                    Map.of("module", "calendar", "operation", "revoke-setup-credential"));
+        }
+        CalendarSetupCredentialResponse revoked = new CalendarSetupCredentialResponse(
+                current.credentialId(),
+                "revoked",
+                current.username(),
+                current.clientType(),
+                current.label(),
+                current.issuedAt(),
+                current.expiresAt(),
+                OffsetDateTime.now(ZoneOffset.UTC),
+                false,
+                false,
+                List.of());
+        setupCredentials.put(credentialId, revoked);
+        return revoked;
+    }
+
     private CalendarAccessModelResponse accessModel() {
         return new CalendarAccessModelResponse(
                 "workspace-calendar",
@@ -176,6 +250,10 @@ public class CalendarFacadeService {
                         "The product calendar facade currently serves the Weave-managed workspace calendar scope.",
                         "Backend CalDAV configuration that targets arbitrary private user calendars must stay fail-closed.",
                         "External clients may use CalDAV discovery URLs, but credentials must come from a user-controlled revocable flow."));
+    }
+
+    private String defaultIfBlank(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value.trim();
     }
 
     private CalendarCredentialReadinessResponse credentialReadiness() {

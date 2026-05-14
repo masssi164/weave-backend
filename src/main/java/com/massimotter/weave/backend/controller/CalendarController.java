@@ -1,7 +1,11 @@
 package com.massimotter.weave.backend.controller;
 
 import com.massimotter.weave.backend.model.ApiErrorResponse;
+import com.massimotter.weave.backend.model.calendar.CalendarAccessPolicyResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarClientSetupResponse;
+import com.massimotter.weave.backend.model.calendar.CalendarSetupCredentialListResponse;
+import com.massimotter.weave.backend.model.calendar.CalendarSetupCredentialRequest;
+import com.massimotter.weave.backend.model.calendar.CalendarSetupCredentialResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarEventResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarEventsResponse;
 import com.massimotter.weave.backend.model.calendar.CreateCalendarEventRequest;
@@ -74,6 +78,31 @@ public class CalendarController {
         return calendarFacadeService.clientSetup();
     }
 
+
+    @GetMapping("/api/calendar/access-policy")
+    @Operation(summary = "Describe fail-closed private calendar access policy")
+    public CalendarAccessPolicyResponse accessPolicy() {
+        return calendarFacadeService.accessPolicy();
+    }
+
+    @GetMapping("/api/calendar/client-setup/credentials")
+    @Operation(summary = "List revocable calendar setup credential references")
+    public CalendarSetupCredentialListResponse setupCredentials() {
+        return calendarFacadeService.setupCredentials();
+    }
+
+    @PostMapping("/api/calendar/client-setup/credentials")
+    @Operation(summary = "Create a revocable calendar setup credential reference without returning secret material")
+    public CalendarSetupCredentialResponse createSetupCredential(
+            @Valid @RequestBody CalendarSetupCredentialRequest request) {
+        return calendarFacadeService.createSetupCredential(request);
+    }
+
+    @DeleteMapping("/api/calendar/client-setup/credentials/{credentialId}")
+    @Operation(summary = "Revoke a calendar setup credential reference")
+    public CalendarSetupCredentialResponse revokeSetupCredential(@PathVariable @Size(max = 128) String credentialId) {
+        return calendarFacadeService.revokeSetupCredential(credentialId);
+    }
 
     @GetMapping(
             value = "/api/calendar/client-setup/apple.mobileconfig",
