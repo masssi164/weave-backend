@@ -22,7 +22,7 @@ class BoardsFacadeServiceTest {
                     assertThat(error.code()).isEqualTo("boards-provider_unavailable");
                     assertThat(error.details()).containsEntry("module", "boards");
                     assertThat(error.details()).containsEntry("preview", true);
-                    assertThat(error.details()).containsEntry("releaseStatus", "post-release-hidden-preview");
+                    assertThat(error.details()).containsEntry("releaseStatus", "active-feature-gated-preview");
                 });
     }
 }

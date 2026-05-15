@@ -1,6 +1,6 @@
-# Release 1 API operations guide
+# Backend API operations guide
 
-This backend is intentionally small for Release 1, but operators still need a clear runtime contract.
+This backend is intentionally small, but operators still need a clear runtime contract.
 
 ## Runtime inputs
 
@@ -65,7 +65,7 @@ Use `401` for missing or invalid tokens. Use `403` when the token is authenticat
 
 `/api/onboarding/status` is the authenticated first-run user snapshot. It returns identity, role/group routing data, invite status, profile completeness, and frontend-safe provisioning states for identity, profile, Matrix, and Nextcloud. Matrix/Nextcloud states are `not_configured`, `pending`, `ready`, `degraded`, or `failed`; response messages must remain support-safe and must not expose downstream stack traces, secrets, tokens, or raw infrastructure errors.
 
-`/api/workspace/release-readiness` is the backend-owned operator snapshot for Release 1. It rolls auth, Matrix chat, and Nextcloud files into one response and lists the exact remaining setup actions when the workspace is still degraded or blocked.
+`/api/workspace/release-readiness` is the backend-owned operator snapshot for the core workspace. It rolls auth, Matrix chat, and Nextcloud files into one response and lists the exact remaining setup actions when the workspace is still degraded or blocked.
 
 The older `/api/v1/workspace/capabilities` and `/api/v1/workspace/release-readiness` paths remain compatibility aliases while clients migrate to the canonical non-versioned workspace routes.
 
@@ -80,11 +80,11 @@ The older `/api/v1/workspace/capabilities` and `/api/v1/workspace/release-readin
 - `GET /api/profile/sync-status` with a valid first-party token should return frontend-safe Matrix/Nextcloud profile sync state
 - `GET /api/onboarding/status` with a valid first-party token should return first-run invite, role/group, profile, Matrix, and Nextcloud provisioning status
 - `GET /api/workspace/capabilities` with a valid first-party token should return the client-facing capability snapshot
-- `GET /api/workspace/release-readiness` with a valid first-party token should return operator-facing Release 1 setup status and remaining actions
+- `GET /api/workspace/release-readiness` with a valid first-party token should return operator-facing workspace setup status and remaining actions
 
 ## Logging and audit baseline
 
-For Release 1, keep at least:
+For the core operator baseline, keep at least:
 
 - reverse proxy access logs with request path, status, latency, and request id
 - application logs from stdout/stderr collected by the deployment target

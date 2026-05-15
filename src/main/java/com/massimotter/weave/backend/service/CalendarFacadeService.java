@@ -152,7 +152,7 @@ public class CalendarFacadeService {
                                 "Signed .mobileconfig download remains fail-closed until profile signing and revocable credentials are implemented.",
                                 List.of(
                                         "iOS, iPadOS, and macOS can install a CalDAV configuration profile with host, port, SSL, principal URL, and username.",
-                                        "Release 2 must not embed a permanent password or backend service credential in the profile.",
+                                        "Profile generation must not embed a permanent password or backend service credential in the profile.",
                                         "The backend route is reserved for a signed no-secret profile and currently returns 503 rather than serving an unsigned artifact.")),
                         new CalendarClientSetupOptionResponse(
                                 "android",
@@ -210,11 +210,11 @@ public class CalendarFacadeService {
         return new CalendarAccessPolicyResponse(
                 accessModel(),
                 List.of("workspace-calendar.read", "workspace-calendar.write", "client-setup.metadata"),
-                List.of("private-user-calendar.read", "backend-actor-private-user-calendar.read"),
+                List.of("private-personal-calendar.read", "backend-actor-private-personal-calendar.read"),
                 List.of(
                         "Choose and document a private calendar access model: user sharing/provisioning, Nextcloud Login Flow/app password, delegated token exchange, or a Weave token bridge.",
                         "Add operator diagnostics proving private calendar templates are explicitly authorized.",
-                        "Add revocation and audit tests before any private user CalDAV endpoint is enabled."),
+                        "Add revocation and audit tests before any private personal CalDAV endpoint is enabled."),
                 false);
     }
 
@@ -419,7 +419,7 @@ public class CalendarFacadeService {
                 "external clients use user-owned revocable per-client credentials; backend actor credentials are never issued to clients",
                 List.of(
                         "The product calendar facade exposes workspace, team, and channel scope metadata.",
-                        "Backend CalDAV configuration that targets arbitrary private user calendars must stay fail-closed.",
+                        "Backend CalDAV configuration that targets arbitrary private personal calendars must stay fail-closed.",
                         "External clients may use CalDAV discovery URLs, but credentials must come from a user-controlled revocable flow."));
     }
 

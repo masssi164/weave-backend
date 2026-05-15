@@ -54,7 +54,7 @@ class CalDavCalendarAdapterTest {
                 .satisfies(error -> {
                     CalendarAdapterException adapterError = (CalendarAdapterException) error;
                     assertThat(adapterError.type()).isEqualTo(CalendarAdapterException.Type.NOT_CONFIGURED);
-                    assertThat(adapterError.details()).containsEntry("calendarScope", "private-user");
+                    assertThat(adapterError.details()).containsEntry("calendarScope", "private-personal");
                     assertThat(adapterError.details()).containsEntry("privateUserTemplateAllowed", false);
                 });
     }

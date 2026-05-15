@@ -44,7 +44,7 @@ public final class NextcloudDeckBoardsRepository implements BoardsRepository {
                         BoardCapability.CHECKLISTS,
                         BoardCapability.CUSTOM_FIELDS,
                         BoardCapability.ACCESSIBLE_NON_DRAG_MOVES),
-                "Nextcloud Deck is a disabled bridge/import adapter contract, not the Weave product model or a Release 1 runtime provider.");
+                "Nextcloud Deck is a disabled bridge/import adapter contract, not the Weave product model or a live runtime provider.");
     }
 
     @Override public BoardPage<WeaveProject> listProjects(BoardQuery query) { throw disabled(); }

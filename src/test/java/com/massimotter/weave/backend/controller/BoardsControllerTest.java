@@ -64,7 +64,7 @@ class BoardsControllerTest {
                         .with(workspaceJwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.preview").value(true))
-                .andExpect(jsonPath("$.releaseStatus").value("post-release-hidden-preview"))
+                .andExpect(jsonPath("$.releaseStatus").value("active-feature-gated-preview"))
                 .andExpect(jsonPath("$.source").value("local-preview-backend-facade"))
                 .andExpect(jsonPath("$.capabilities.enabled").value(true))
                 .andExpect(jsonPath("$.projects[0].id").value("local-project-1"))

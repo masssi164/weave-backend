@@ -2,13 +2,13 @@
 
 [![CI](https://github.com/masssi164/weave-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/masssi164/weave-backend/actions/workflows/ci.yml)
 
-`weave-backend` is the Spring Boot product API for Weave. It keeps Release 1 client contracts small and supportable, avoids pushing backend-owned secrets or raw downstream protocols into clients, and leaves room for the broader Weave vision: accessible workspaces, open operator control, data sovereignty, and a future Weaver intelligence layer for assistants, agents, automation, and connectors.
+`weave-backend` is the Spring Boot product API for Weave. It keeps active client contracts small and supportable, avoids pushing backend-owned secrets or raw downstream protocols into clients, and leaves room for the broader Weave vision: accessible workspaces, open operator control, data sovereignty, and a later Weaver intelligence layer for assistants, agents, automation, and connectors.
 
 The backend is intentionally **not** a generic proxy for Matrix, Nextcloud, or Keycloak. Flutter can use native OIDC/PKCE and Matrix client flows where that is the right protocol boundary. This service owns the workflows that benefit from a server-side product layer: normalized Weave APIs, stable error envelopes, release-readiness checks, backend-owned integrations, and orchestration that should not live in the app.
 
-## Release 1 scope
+## Active product/API scope
 
-Release 1 is an early operator-facing slice, not the full Teams/Slack migration story yet. The backend currently provides:
+The backend is an active product facade for the MVP collaboration surfaces. Some runtime slices remain feature-gated while contracts, auth, accessibility, and operator validation mature. The backend currently provides:
 
 - public health and platform bootstrap endpoints for gateway and smoke checks
 - first-party JWT issuer, audience, client, and `weave:workspace` scope validation
@@ -17,12 +17,12 @@ Release 1 is an early operator-facing slice, not the full Teams/Slack migration 
 - first-run onboarding status at `/api/onboarding/status`
 - workspace capability and release-readiness snapshots at `/api/workspace/capabilities` and `/api/workspace/release-readiness`
 - Nextcloud-backed Files facade endpoints when a backend-owned actor is configured; otherwise they fail closed
-- Calendar facade endpoints mapped to the backend actor's Nextcloud CalDAV workspace calendar when configured; unsafe private-user calendar templates fail closed
-- secret-free Calendar client setup metadata at `GET /api/calendar/client-setup` for Release 2 profile/download planning; it does not return credentials or generate profiles yet
+- Calendar facade endpoints mapped to the backend actor's Nextcloud CalDAV workspace calendar fallback while workspace/team/channel scheduling scopes are implemented; unsafe private-personal calendar templates fail closed
+- secret-free Calendar client setup metadata at `GET /api/calendar/client-setup` for feature-gated native-client setup; it does not return credentials or generate profiles yet
 - OpenAPI JSON at `/v3/api-docs`
 - Actuator health/info endpoints, Gradle wrapper, Dockerfile, and GitHub Actions CI
 
-Release 1 does **not** claim a complete Teams/Slack replacement, end-user credential brokering, full Matrix/Nextcloud provisioning automation, recurrence-rich calendar UX, sharing/move policy, Boards/Tasks product navigation, or the future Weaver intelligence layer. Those remain product-roadmap items behind explicit contracts. The hidden Boards/Tasks preview contract is documented separately in [docs/boards-preview-contract.md](docs/boards-preview-contract.md) and must not be treated as a Release 1 enabled surface.
+The current backend does **not** yet claim a complete Teams/Slack replacement, end-user credential brokering, full Matrix/Nextcloud provisioning automation, recurrence-rich calendar UX, sharing/move policy, live Boards/Tasks provider runtime, or the later Weaver intelligence layer. Those remain product-roadmap items behind explicit contracts. The hidden Boards/Tasks preview contract is documented separately in [docs/boards-preview-contract.md](docs/boards-preview-contract.md) and must not be treated as a live-provider-enabled surface.
 
 ## Product boundary
 
@@ -38,7 +38,7 @@ Avoid using it to replace standards-based native flows by default:
 
 - no custom server-side login proxy in front of Matrix Native OAuth 2.0
 - no assumption that a mobile OIDC bearer token can be reused as a Matrix access token
-- no direct Flutter-to-Nextcloud WebDAV/OCS/CalDAV contract as the default Release 1 product API
+- no direct Flutter-to-Nextcloud WebDAV/OCS/CalDAV contract as the default live product API
 
 ## Repo compass
 
@@ -46,10 +46,10 @@ Avoid using it to replace standards-based native flows by default:
 - `src/main/resources/application.yml`: runtime defaults and environment-variable bindings.
 - `src/test/java/...`: contract and service tests for auth, profiles, readiness, files, and calendar behavior.
 - `docs/runtime-configuration.md`: complete environment-variable reference and fail-closed adapter behavior.
-- `docs/release-operations.md`: Release 1 API operations guide and minimum operator checks.
-- `docs/calendar-client-setup.md`: Release 2 research and phased plan for Apple `.mobileconfig`, Android DAVx5, desktop CalDAV, and read-only webcal/ICS setup.
+- `docs/release-operations.md`: Backend API operations guide and minimum operator checks.
+- `docs/calendar-client-setup.md`: active research and phased plan for Apple `.mobileconfig`, Android DAVx5, desktop CalDAV, and read-only webcal/ICS setup.
 - `docs/architecture-alignment.md`: cross-repo responsibility split for app, backend, and infrastructure.
-- `docs/boards-preview-contract.md`: hidden, post-Release-1 Boards/Tasks provider-neutral contract notes; not a Product screenshots or Release 1 surface.
+- `docs/boards-preview-contract.md`: active feature-gated Boards/Tasks provider-neutral contract notes; not a Product screenshots or live product surface.
 - `docs/issues/`: historical alignment issue drafts.
 
 ## Quick start
@@ -93,6 +93,6 @@ Protected `/api/**` routes require a bearer token whose `iss`, `aud`, `azp`/`cli
 ## Operator notes
 
 - Runtime variables and backend-owned actor credentials are documented in [docs/runtime-configuration.md](docs/runtime-configuration.md).
-- Release 1 readiness, stable auth errors, and minimum smoke checks are documented in [docs/release-operations.md](docs/release-operations.md).
+- workspace readiness, stable auth errors, and minimum smoke checks are documented in [docs/release-operations.md](docs/release-operations.md).
 - Keep issuer/JWKS/client/audience values aligned with the public auth contract exposed to the app.
 - Do not log raw bearer tokens, Nextcloud actor tokens, app passwords, or CalDAV credentials.

@@ -36,7 +36,7 @@ public record CalendarCalDavProperties(
     }
 
     public String calendarScope() {
-        return targetsPrivateUserCalendar() ? "private-user" : "workspace";
+        return targetsPrivateUserCalendar() ? "private-personal" : "workspace";
     }
 
     public enum AuthMode {

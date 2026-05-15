@@ -9,7 +9,7 @@ public record CalendarClientSetupOptionResponse(
         String platform,
         @Schema(description = "Setup mechanism.", example = "mobileconfig")
         String method,
-        @Schema(description = "Whether this setup method is currently safe for Release 2 use.", example = "false")
+        @Schema(description = "Whether this setup method is currently safe for feature-gated use.", example = "false")
         boolean available,
         @Schema(description = "Optional action URL for supported external clients. Contains no credential.")
         String actionUrl,

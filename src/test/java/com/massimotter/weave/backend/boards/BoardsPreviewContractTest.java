@@ -34,8 +34,8 @@ class BoardsPreviewContractTest {
                 .isInstanceOf(BoardsException.class)
                 .satisfies(error -> assertThat(((BoardsException) error).code())
                         .isEqualTo(BoardsErrorCode.PROVIDER_UNAVAILABLE))
-                .hasMessageContaining("hidden preview module")
-                .hasMessageContaining("Release 1");
+                .hasMessageContaining("feature-gated preview module")
+                .hasMessageContaining("runtime validation");
     }
 
     @Test
@@ -134,7 +134,7 @@ class BoardsPreviewContractTest {
         assertThat(contract).contains("title: Weave Boards/Tasks Preview Contract");
         assertThat(contract).contains("/api/boards/preview");
         assertThat(contract).contains("/api/boards/{boardId}/tasks");
-        assertThat(contract).contains("post-release-hidden-preview");
+        assertThat(contract).contains("active-feature-gated-preview");
         assertThat(contract).contains("TaskBoardEvent");
         assertThat(contract).contains("task.moved");
     }

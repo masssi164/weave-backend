@@ -44,7 +44,7 @@ public final class OpenProjectBoardsRepository implements BoardsRepository {
                         BoardCapability.INCREMENTAL_SYNC,
                         BoardCapability.CHECKLISTS,
                         BoardCapability.ACCESSIBLE_NON_DRAG_MOVES),
-                "OpenProject is a disabled accessibility and mature-workflow benchmark adapter contract, not a Release 1 runtime provider.");
+                "OpenProject is a disabled accessibility and mature-workflow benchmark adapter contract, not a live runtime provider.");
     }
 
     @Override public BoardPage<WeaveProject> listProjects(BoardQuery query) { throw disabled(); }
