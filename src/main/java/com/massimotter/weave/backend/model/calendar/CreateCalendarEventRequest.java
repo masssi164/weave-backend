@@ -30,7 +30,20 @@ public record CreateCalendarEventRequest(
         @Size(max = 1024)
         String location,
         @Schema(description = "Whether the event is all-day.")
-        boolean allDay) {
+        boolean allDay,
+        @Schema(description = "Calendar scope to create the event in. Defaults to the workspace calendar.")
+        CalendarScopeResponse scope) {
+
+    public CreateCalendarEventRequest(
+            String title,
+            String description,
+            OffsetDateTime startsAt,
+            OffsetDateTime endsAt,
+            String timezone,
+            String location,
+            boolean allDay) {
+        this(title, description, startsAt, endsAt, timezone, location, allDay, CalendarScopeResponse.workspace());
+    }
 
     @AssertTrue(message = "endsAt must be after startsAt")
     public boolean isTimeRangeValid() {

@@ -3,6 +3,7 @@ package com.massimotter.weave.backend.controller;
 import com.massimotter.weave.backend.model.ApiErrorResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarAccessPolicyResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarClientSetupResponse;
+import com.massimotter.weave.backend.model.calendar.CalendarScopesResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarSetupCredentialListResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarSetupCredentialRequest;
 import com.massimotter.weave.backend.model.calendar.CalendarSetupCredentialResponse;
@@ -56,6 +57,14 @@ public class CalendarController {
         this.calendarFacadeService = calendarFacadeService;
     }
 
+    @GetMapping("/api/calendar/scopes")
+    @Operation(summary = "List visible workspace, team, and channel calendar scopes")
+    @ApiResponse(responseCode = "200", description = "Visible calendar scopes.",
+            content = @Content(schema = @Schema(implementation = CalendarScopesResponse.class)))
+    public CalendarScopesResponse scopes() {
+        return calendarFacadeService.scopes();
+    }
+
     @GetMapping("/api/calendar/events")
     @Operation(summary = "List calendar events")
     @ApiResponse(responseCode = "200", description = "Calendar event listing.",
@@ -66,8 +75,17 @@ public class CalendarController {
             OffsetDateTime from,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            OffsetDateTime to) {
-        return calendarFacadeService.list(from, to);
+            OffsetDateTime to,
+            @RequestParam(required = false)
+            @Size(max = 64)
+            String scopeType,
+            @RequestParam(required = false)
+            @Size(max = 128)
+            String teamId,
+            @RequestParam(required = false)
+            @Size(max = 128)
+            String channelId) {
+        return calendarFacadeService.list(from, to, scopeType, teamId, channelId);
     }
 
     @GetMapping("/api/calendar/client-setup")

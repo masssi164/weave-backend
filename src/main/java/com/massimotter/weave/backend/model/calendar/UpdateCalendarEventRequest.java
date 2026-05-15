@@ -26,7 +26,21 @@ public record UpdateCalendarEventRequest(
         @Schema(description = "Updated all-day flag.")
         Boolean allDay,
         @Schema(description = "Opaque revision token supplied by the client for conflict detection.")
-        String etag) {
+        String etag,
+        @Schema(description = "Calendar scope for the updated event. Defaults to the event id scope or workspace calendar.")
+        CalendarScopeResponse scope) {
+
+    public UpdateCalendarEventRequest(
+            String title,
+            String description,
+            OffsetDateTime startsAt,
+            OffsetDateTime endsAt,
+            String timezone,
+            String location,
+            Boolean allDay,
+            String etag) {
+        this(title, description, startsAt, endsAt, timezone, location, allDay, etag, null);
+    }
 
     @AssertTrue(message = "endsAt must be after startsAt")
     public boolean isTimeRangeValid() {
