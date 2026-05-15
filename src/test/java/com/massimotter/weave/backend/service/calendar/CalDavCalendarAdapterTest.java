@@ -152,6 +152,44 @@ END:VCALENDAR&#13;
         assertThat(updated.title()).isEqualTo("Updated");
     }
 
+    @Test
+    void createsBackendActorCalendarWhenCreateFindsMissingCollection() throws Exception {
+        List<String> methods = new ArrayList<>();
+        List<String> paths = new ArrayList<>();
+        List<String> requestBodies = new ArrayList<>();
+        server = server(exchange -> {
+            methods.add(exchange.getRequestMethod());
+            paths.add(exchange.getRequestURI().getRawPath());
+            requestBodies.add(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+            if ("PUT".equals(exchange.getRequestMethod()) && methods.size() == 1) {
+                respond(exchange, 404, "", null);
+            } else if ("MKCALENDAR".equals(exchange.getRequestMethod())) {
+                respond(exchange, 201, "", null);
+            } else if ("PUT".equals(exchange.getRequestMethod())) {
+                respond(exchange, 201, "", "\"etag-new\"");
+            } else {
+                respond(exchange, 405, "", null);
+            }
+        });
+
+        var created = adapter().create(principal(), new CreateCalendarEventRequest(
+                "Planning",
+                null,
+                OffsetDateTime.parse("2026-04-26T10:00:00+02:00"),
+                OffsetDateTime.parse("2026-04-26T11:00:00+02:00"),
+                "Europe/Berlin",
+                null,
+                false));
+
+        assertThat(methods).containsExactly("PUT", "MKCALENDAR", "PUT");
+        assertThat(paths.get(0)).startsWith("/remote.php/dav/calendars/weave-backend/personal/");
+        assertThat(paths.get(1)).isEqualTo("/remote.php/dav/calendars/weave-backend/personal/");
+        assertThat(paths.get(2)).isEqualTo(paths.get(0));
+        assertThat(requestBodies.get(1)).contains("Weave workspace calendar");
+        assertThat(created.title()).isEqualTo("Planning");
+        assertThat(created.etag()).isEqualTo("\"etag-new\"");
+    }
+
     private CalDavCalendarAdapter adapter() {
         return new CalDavCalendarAdapter(new CalendarCalDavProperties(
                 "http://localhost:" + server.getAddress().getPort(),
