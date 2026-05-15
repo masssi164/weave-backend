@@ -78,3 +78,24 @@ When required actor credentials are missing or an unsafe private-user template i
 Profile facade endpoints are protected by the same first-party bearer-token contract as `/api/me`. `PATCH /api/profile` accepts partial updates for `displayName`, `avatar`, `locale`, `timezone`, `accessibilityPreferences`, and `profileVisibility`. Set `WEAVE_PROFILE_STORAGE_PATH` to mounted durable storage for containerized Release 1 runs.
 
 Onboarding status returns identity, roles, groups, invite status, profile completeness, and module provisioning states. Downstream states must remain frontend-safe and must not expose stack traces, tokens, secrets, or raw service errors.
+
+## Interop gateway, Slack on-ramp, guests, and migration previews
+
+Release 1 keeps interop, guest access, and migration/import execution disabled by default. The backend exposes contract/readiness surfaces so Release 2 work can be validated without making Slack, Teams, guest portal, connector SDK, or migration runtime behavior a Release 1 dependency.
+
+- `WEAVE_INTEROP_ENABLED`: master interop gateway flag, defaults to `false`.
+- `WEAVE_INTEROP_SUPPORT_BUNDLE_REDACTION_MODE`: support bundle redaction mode label, defaults to `support-safe-redacted`.
+- `WEAVE_INTEROP_SLACK_ENABLED`: Slack provider flag, defaults to `false`.
+- `WEAVE_INTEROP_SLACK_CLIENT_ID`: Slack app client id metadata. This is not secret material.
+- `WEAVE_INTEROP_SLACK_CLIENT_SECRET_REF`: reference to Slack OAuth client secret in an operator-owned secret store. Raw client secrets must not be supplied through API payloads or support bundles.
+- `WEAVE_INTEROP_SLACK_SIGNING_SECRET_REF`: reference to Slack request signing secret. Signed inbound events fail closed when this reference cannot be resolved by backend secret brokering.
+- `WEAVE_INTEROP_SLACK_TOKEN_REF`: reference to Slack bot token. Raw bot/access/refresh tokens must not be supplied through API payloads or support bundles.
+- `WEAVE_INTEROP_SLACK_WORKSPACE_ID`: one Slack workspace id for the proof-of-on-ramp.
+- `WEAVE_INTEROP_SLACK_CHANNEL_ID`: one Slack channel id mapped by the proof-of-on-ramp.
+- `WEAVE_INTEROP_SLACK_ROOM_ID`: one Weave/Matrix room reference mapped by the proof-of-on-ramp.
+- `WEAVE_INTEROP_TEAMS_ENABLED`: Teams provider flag, defaults to `false`; Teams remains gated behind Slack hardening.
+- `WEAVE_GUEST_ENABLED`: guest invitation flag, defaults to `false` and denies access while preserving distinct guest identity semantics.
+- `WEAVE_MIGRATION_ENABLED`: migration dry-run flag, defaults to `false`; dry-run reports are replay-safe and do not import source data.
+- `WEAVE_CONNECTORS_PUBLIC_SDK_ENABLED`: connector SDK flag, defaults to `false`; manifest validation rejects inline secret material.
+
+The Slack on-ramp is intentionally one-channel and sandbox-first. Inbound Slack text events require Slack HMAC request signature verification before mapping. Bot-message subtype events are rejected before mapping to prevent loops. Outbound Weave-to-Slack messages currently return a deterministic, idempotent `sandbox-not-delivered` response and do not call Slack production APIs. Status responses expose degraded/rate-limited/signature/loop-prevention reasons without exposing secret refs or raw provider tokens.

@@ -1,12 +1,15 @@
 package com.massimotter.weave.backend.service.interop;
 
 import com.massimotter.weave.backend.config.InteropGatewayProperties;
+import com.massimotter.weave.backend.exception.ApiErrorException;
 import com.massimotter.weave.backend.model.interop.CanonicalBridgeEventResponse;
 import com.massimotter.weave.backend.model.interop.SlackEventRequest;
+import com.massimotter.weave.backend.model.interop.SlackOutboundMessageRequest;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class InteropCoreServiceTest {
 
@@ -23,6 +26,44 @@ class InteropCoreServiceTest {
 
     @Test
     void enabledSlackSandboxMapsTextEventWithoutSecretOrProductionDelivery() {
+        InteropGatewayService service = enabledService();
+
+        CanonicalBridgeEventResponse event = service.ingestSlackEvent(
+                new SlackEventRequest("E123", "T123", "C123", "U123", "hello", null, null));
+
+        assertThat(event.provider()).isEqualTo("slack");
+        assertThat(event.roomRef()).isEqualTo("room-123");
+        assertThat(event.dryRunOnly()).isTrue();
+        assertThat(event.payload()).containsEntry("text", "hello");
+        assertThat(event.toString()).doesNotContain("secret://");
+    }
+
+    @Test
+    void outboundSlackSandboxMapsMessageWithoutProviderDelivery() {
+        InteropGatewayService service = enabledService();
+
+        var response = service.sendSlackMessage(new SlackOutboundMessageRequest("W1", "hello from Weave", null));
+
+        assertThat(response.provider()).isEqualTo("slack");
+        assertThat(response.channelRef()).isEqualTo("C123");
+        assertThat(response.deliveryStatus()).isEqualTo("sandbox-not-delivered");
+        assertThat(response.dryRunOnly()).isTrue();
+        assertThat(response.productionCallAttempted()).isFalse();
+        assertThat(response.toString()).doesNotContain("secret://");
+    }
+
+    @Test
+    void slackSandboxPreventsBotMessageLoopsBeforeMapping() {
+        InteropGatewayService service = enabledService();
+
+        assertThatThrownBy(() -> service.ingestSlackEvent(
+                        new SlackEventRequest("E123", "T123", "C123", "U123", "loop", null, "bot_message")))
+                .isInstanceOf(ApiErrorException.class)
+                .extracting("code")
+                .isEqualTo("slack-loop-prevented");
+    }
+
+    private InteropGatewayService enabledService() {
         InteropGatewayProperties properties = new InteropGatewayProperties(
                 true,
                 new InteropGatewayProperties.Provider(
@@ -36,16 +77,11 @@ class InteropCoreServiceTest {
                         "room-123"),
                 null,
                 "support-safe-redacted");
-        InteropGatewayService service = new InteropGatewayService(properties, new IdempotencyKeyService());
-
-        CanonicalBridgeEventResponse event = service.ingestSlackEvent(
-                new SlackEventRequest("E123", "T123", "C123", "U123", "hello", null));
-
-        assertThat(event.provider()).isEqualTo("slack");
-        assertThat(event.roomRef()).isEqualTo("room-123");
-        assertThat(event.dryRunOnly()).isTrue();
-        assertThat(event.payload()).containsEntry("text", "hello");
-        assertThat(event.toString()).doesNotContain("secret://");
+        return new InteropGatewayService(
+                properties,
+                new IdempotencyKeyService(),
+                new SlackSignatureVerifier(),
+                ignored -> java.util.Optional.of("signing-secret"));
     }
 
     @Test
