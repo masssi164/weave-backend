@@ -9,5 +9,6 @@ public record SlackEventRequest(
         @NotBlank @Size(max = 128) String channelId,
         @NotBlank @Size(max = 128) String userId,
         @NotBlank @Size(max = 4096) String text,
-        @Size(max = 128) String threadTs) {
+        @Size(max = 128) String threadTs,
+        @Size(max = 128) String subtype) {
 }

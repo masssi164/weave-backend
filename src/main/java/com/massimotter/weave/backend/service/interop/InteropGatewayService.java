@@ -6,6 +6,8 @@ import com.massimotter.weave.backend.model.interop.CanonicalBridgeEventResponse;
 import com.massimotter.weave.backend.model.interop.InteropStatusResponse;
 import com.massimotter.weave.backend.model.interop.SlackEventRequest;
 import com.massimotter.weave.backend.model.interop.SlackOAuthCallbackRequest;
+import com.massimotter.weave.backend.model.interop.SlackOutboundMessageRequest;
+import com.massimotter.weave.backend.model.interop.SlackOutboundMessageResponse;
 import com.massimotter.weave.backend.model.interop.SlackStatusResponse;
 import com.massimotter.weave.backend.model.interop.TeamsContractResponse;
 import java.util.LinkedHashMap;
@@ -19,10 +21,18 @@ public class InteropGatewayService {
 
     private final InteropGatewayProperties properties;
     private final IdempotencyKeyService idempotencyKeyService;
+    private final SlackSignatureVerifier slackSignatureVerifier;
+    private final SlackSecretResolver slackSecretResolver;
 
-    public InteropGatewayService(InteropGatewayProperties properties, IdempotencyKeyService idempotencyKeyService) {
+    public InteropGatewayService(
+            InteropGatewayProperties properties,
+            IdempotencyKeyService idempotencyKeyService,
+            SlackSignatureVerifier slackSignatureVerifier,
+            SlackSecretResolver slackSecretResolver) {
         this.properties = properties;
         this.idempotencyKeyService = idempotencyKeyService;
+        this.slackSignatureVerifier = slackSignatureVerifier;
+        this.slackSecretResolver = slackSecretResolver;
     }
 
     public InteropStatusResponse status() {
@@ -64,7 +74,7 @@ public class InteropGatewayService {
                 tokenRefConfigured,
                 mappingConfigured,
                 false,
-                List.of("rate_limited", "missing_mapping", "missing_consent", "signature_invalid", "delivery_degraded"),
+                List.of("rate_limited", "missing_mapping", "missing_consent", "signature_invalid", "delivery_degraded", "loop_prevented"),
                 slackActions(oauthConfigured, signingConfigured, tokenRefConfigured, mappingConfigured));
     }
 
@@ -81,10 +91,19 @@ public class InteropGatewayService {
     }
 
     public CanonicalBridgeEventResponse ingestSlackEvent(SlackEventRequest request) {
+        return ingestSlackEvent(request, null, null, null);
+    }
+
+    public CanonicalBridgeEventResponse ingestSlackEvent(
+            SlackEventRequest request,
+            String rawBody,
+            String requestTimestamp,
+            String requestSignature) {
         SlackStatusResponse status = slackStatus();
         if (!status.enabled()) {
             throw disabled("slack-events");
         }
+        verifySlackSignature(rawBody, requestTimestamp, requestSignature);
         if (!status.channelMappingConfigured()) {
             throw new ApiErrorException(
                     HttpStatus.SERVICE_UNAVAILABLE,
@@ -92,11 +111,19 @@ public class InteropGatewayService {
                     "Slack bridge mapping is not configured.",
                     Map.of("module", "interop", "provider", "slack", "operation", "ingest-event"));
         }
+        if ("bot_message".equals(request.subtype())) {
+            throw new ApiErrorException(
+                    HttpStatus.CONFLICT,
+                    "slack-loop-prevented",
+                    "Slack bridge ignored a provider event that appears to come from a bridged bot message.",
+                    Map.of("module", "interop", "provider", "slack", "operation", "ingest-event"));
+        }
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("text", request.text());
         payload.put("externalEventId", request.eventId());
         payload.put("channelId", request.channelId());
         payload.put("threadTs", request.threadTs());
+        payload.put("loopPrevention", "bot_message events are rejected before mapping");
         return new CanonicalBridgeEventResponse(
                 idempotencyKeyService.key("slack:event", request.teamId() + ":" + request.eventId()),
                 "slack",
@@ -109,6 +136,33 @@ public class InteropGatewayService {
                 true);
     }
 
+    public SlackOutboundMessageResponse sendSlackMessage(SlackOutboundMessageRequest request) {
+        SlackStatusResponse status = slackStatus();
+        if (!status.enabled()) {
+            throw disabled("slack-send-message");
+        }
+        if (!status.channelMappingConfigured()) {
+            throw new ApiErrorException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "slack-mapping-unavailable",
+                    "Slack bridge mapping is not configured.",
+                    Map.of("module", "interop", "provider", "slack", "operation", "send-message"));
+        }
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("text", request.text());
+        payload.put("threadTs", request.threadTs());
+        payload.put("loopPrevention", "outbound sandbox does not call Slack and uses idempotency before delivery");
+        return new SlackOutboundMessageResponse(
+                idempotencyKeyService.key("weave:slack:message", properties.slack().channelId() + ":" + request.eventId()),
+                "slack",
+                properties.slack().workspaceId(),
+                properties.slack().channelId(),
+                "sandbox-not-delivered",
+                true,
+                false,
+                payload);
+    }
+
     public Map<String, Object> oauthCallback(SlackOAuthCallbackRequest request) {
         if (!slackStatus().enabled()) {
             throw disabled("oauth-callback");
@@ -118,6 +172,29 @@ public class InteropGatewayService {
                 "installed", false,
                 "credentialStored", false,
                 "message", "Slack OAuth skeleton is wired; token exchange remains disabled until secret brokering is configured.");
+    }
+
+    private void verifySlackSignature(String rawBody, String requestTimestamp, String requestSignature) {
+        if (rawBody == null && requestTimestamp == null && requestSignature == null) {
+            return;
+        }
+        String signingSecretRef = properties.slack().signingSecretRef();
+        if (!hasText(rawBody) || !hasText(requestTimestamp) || !hasText(requestSignature) || !hasText(signingSecretRef)) {
+            throw signatureInvalid("missing Slack signature metadata");
+        }
+        String signingSecret = slackSecretResolver.resolveSigningSecret(signingSecretRef)
+                .orElseThrow(() -> signatureInvalid("Slack signing secret reference is not resolvable"));
+        if (!slackSignatureVerifier.verify(signingSecret, requestTimestamp, rawBody, requestSignature)) {
+            throw signatureInvalid("Slack request signature did not verify");
+        }
+    }
+
+    private ApiErrorException signatureInvalid(String reason) {
+        return new ApiErrorException(
+                HttpStatus.UNAUTHORIZED,
+                "slack-signature-invalid",
+                "Slack request signature could not be verified.",
+                Map.of("module", "interop", "provider", "slack", "operation", "ingest-event", "reason", reason));
     }
 
     private InteropStatusResponse.ExternalConnectionResponse slackConnection() {

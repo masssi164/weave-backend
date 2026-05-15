@@ -62,6 +62,7 @@ class OpenApiDocumentationTest {
                 .andExpect(jsonPath("$.paths['/api/interop/slack/status']").exists())
                 .andExpect(jsonPath("$.paths['/api/interop/slack/oauth/callback']").exists())
                 .andExpect(jsonPath("$.paths['/api/interop/slack/events']").exists())
+                .andExpect(jsonPath("$.paths['/api/interop/slack/messages']").exists())
                 .andExpect(jsonPath("$.paths['/api/interop/teams/contract']").exists())
                 .andExpect(jsonPath("$.paths['/api/guest/access-contract']").exists())
                 .andExpect(jsonPath("$.paths['/api/guest/invitations']").exists())
