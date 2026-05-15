@@ -111,7 +111,7 @@ public class WorkspaceReleaseReadinessService {
                     hasText(dependencyUrl)
                             ? "Chat is disabled even though a Matrix route is configured."
                             : "Chat is disabled for this workspace snapshot.",
-                    "Enable WEAVE_WORKSPACE_CHAT_ENABLED for the Release 1 workspace when chat should ship.");
+                    "Enable WEAVE_WORKSPACE_CHAT_ENABLED for the workspace when chat should ship.");
         };
     }
 
@@ -144,7 +144,7 @@ public class WorkspaceReleaseReadinessService {
                     hasText(dependencyUrl)
                             ? "Files are disabled even though a Nextcloud route is configured."
                             : "Files are disabled for this workspace snapshot.",
-                    "Enable WEAVE_WORKSPACE_FILES_ENABLED for the Release 1 workspace when files should ship.");
+                    "Enable WEAVE_WORKSPACE_FILES_ENABLED for the workspace when files should ship.");
         };
     }
 
@@ -164,11 +164,11 @@ public class WorkspaceReleaseReadinessService {
 
     private String summaryFor(WorkspaceCapabilityReadiness readiness, List<String> actions) {
         return switch (readiness) {
-            case READY -> "Release 1 workspace dependencies are configured and ready to ship.";
-            case BLOCKED -> "Release 1 is blocked until the first-party auth contract is complete.";
-            case DEGRADED -> "Release 1 is partially configured. " + actions.size()
+            case READY -> "workspace dependencies are configured and ready to ship.";
+            case BLOCKED -> "Workspace readiness is blocked until the first-party auth contract is complete.";
+            case DEGRADED -> "Workspace readiness is partially configured. " + actions.size()
                     + " operator action(s) remain before auth, chat, and files are all ready.";
-            case UNAVAILABLE -> "Release 1 readiness is unavailable.";
+            case UNAVAILABLE -> "workspace readiness is unavailable.";
         };
     }
 

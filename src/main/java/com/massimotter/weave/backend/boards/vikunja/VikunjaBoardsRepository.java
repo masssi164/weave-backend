@@ -44,7 +44,7 @@ public final class VikunjaBoardsRepository implements BoardsRepository {
                         BoardCapability.CHECKLISTS,
                         BoardCapability.ACCESSIBLE_NON_DRAG_MOVES),
                 EnumSet.of(BoardCapability.CUSTOM_FIELDS),
-                "Vikunja is the first adapter boundary, but the Boards/Tasks module is hidden and disabled for Release 1.");
+                "Vikunja is the first adapter boundary, but the Boards/Tasks module is feature-gated and disabled until runtime validation passes.");
     }
 
     @Override

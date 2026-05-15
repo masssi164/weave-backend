@@ -41,7 +41,7 @@ public class BoardsFacadeService {
                     .toList();
             return new BoardsPreviewResponse(
                     true,
-                    "post-release-hidden-preview",
+                    "active-feature-gated-preview",
                     "local-preview-backend-facade",
                     boardsRepository.capabilities(),
                     projects,
@@ -111,7 +111,7 @@ public class BoardsFacadeService {
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("module", "boards");
         details.put("preview", true);
-        details.put("releaseStatus", "post-release-hidden-preview");
+        details.put("releaseStatus", "active-feature-gated-preview");
         details.putAll(exception.details());
         return new ApiErrorException(status, "boards-" + exception.code().contractName(), exception.getMessage(), details);
     }

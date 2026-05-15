@@ -148,7 +148,7 @@ class PlatformProductContractControllerTest {
         mockMvc.perform(get("/api/calendar/access-policy").with(workspaceJwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.backendActorMayReadPrivateUserCalendars").value(false))
-                .andExpect(jsonPath("$.deniedScopes[0]").value("private-user-calendar.read"));
+                .andExpect(jsonPath("$.deniedScopes[0]").value("private-personal-calendar.read"));
 
         MvcResult created = mockMvc.perform(post("/api/calendar/client-setup/credentials")
                         .with(workspaceJwt())

@@ -30,7 +30,7 @@ class BoardProviderSpikeContractsTest {
                 BoardCapability.WEBHOOK_EVENTS,
                 BoardCapability.INCREMENTAL_SYNC,
                 BoardCapability.ACCESSIBLE_NON_DRAG_MOVES);
-        assertThat(capabilities.supportSafeSummary()).contains("benchmark").contains("Release 1");
+        assertThat(capabilities.supportSafeSummary()).contains("benchmark").contains("disabled");
         assertThatThrownBy(() -> repository.listProjects(null))
                 .isInstanceOf(BoardsException.class)
                 .satisfies(error -> assertThat(((BoardsException) error).code())
@@ -56,7 +56,7 @@ class BoardProviderSpikeContractsTest {
                 BoardCapability.INCREMENTAL_SYNC,
                 BoardCapability.CUSTOM_FIELDS,
                 BoardCapability.ACCESSIBLE_NON_DRAG_MOVES);
-        assertThat(capabilities.supportSafeSummary()).contains("bridge").contains("Release 1");
+        assertThat(capabilities.supportSafeSummary()).contains("bridge").contains("disabled");
         assertThatThrownBy(() -> repository.listProjects(null))
                 .isInstanceOf(BoardsException.class)
                 .satisfies(error -> assertThat(((BoardsException) error).code())

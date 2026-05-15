@@ -26,7 +26,7 @@ class VikunjaBoardsMapperTest {
         var source = new VikunjaProjectSnapshot(
                 42,
                 "Launch Plan",
-                "Coordinate Release 1 follow-ups",
+                "Coordinate active product follow-ups",
                 false,
                 URI.create("https://tasks.weave.local/projects/42"));
 
@@ -45,7 +45,7 @@ class VikunjaBoardsMapperTest {
         assertThat(board.id()).isEqualTo("vikunja:board:42");
         assertThat(board.projectId()).isEqualTo("vikunja:project:42");
         assertThat(board.name()).isEqualTo("Launch Plan");
-        assertThat(board.description()).isEqualTo("Coordinate Release 1 follow-ups");
+        assertThat(board.description()).isEqualTo("Coordinate active product follow-ups");
         assertThat(board.archived()).isFalse();
     }
 

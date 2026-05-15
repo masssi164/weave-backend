@@ -7,14 +7,14 @@ info:
     Hidden preview-only provider-neutral schema and route draft for future Boards/Tasks work.
     The runtime routes are disabled by default, require the normal authenticated Weave
     workspace boundary, use only a local/in-memory preview adapter, and do not publish
-    Boards/Tasks as a Release 1 product API.
+    Boards/Tasks as a live product API.
 paths:
   /api/boards/preview:
     get:
       summary: Read hidden Boards/Tasks preview snapshot
       responses:
         '200':
-          description: Provider-neutral hidden preview snapshot.
+          description: Provider-neutral feature-gated preview snapshot.
           content:
             application/json:
               schema:
@@ -24,7 +24,7 @@ paths:
         '503': { description: Preview runtime is disabled or unavailable. }
   /api/boards/{boardId}/tasks:
     post:
-      summary: Create a hidden preview task
+      summary: Create a feature-gated preview task
       parameters:
         - name: boardId
           in: path
@@ -45,7 +45,7 @@ paths:
                 $ref: '#/components/schemas/TaskItem'
   /api/boards/tasks/{taskId}/move:
     post:
-      summary: Move a hidden preview task without drag-and-drop
+      summary: Move a feature-gated preview task without drag-and-drop
       parameters:
         - name: taskId
           in: path
@@ -66,7 +66,7 @@ paths:
                 $ref: '#/components/schemas/TaskItem'
   /api/boards/tasks/{taskId}/complete:
     post:
-      summary: Complete a hidden preview task without drag-and-drop
+      summary: Complete a feature-gated preview task without drag-and-drop
       parameters:
         - name: taskId
           in: path
@@ -90,7 +90,7 @@ components:
         preview: { type: boolean }
         releaseStatus:
           type: string
-          enum: [post-release-hidden-preview]
+          enum: [active-feature-gated-preview]
         source:
           type: string
           enum: [local-preview-backend-facade]

@@ -1,6 +1,6 @@
 # Runtime configuration
 
-This document is the backend runtime reference for Release 1 operators and local integration runs. The top-level README keeps the product boundary short; this file keeps the full environment-variable contract in one place.
+This document is the backend runtime reference for operators and local integration runs. The top-level README keeps the product boundary short; this file keeps the full environment-variable contract in one place.
 
 ## Required runtime variable
 
@@ -52,7 +52,7 @@ The app never sends raw Nextcloud credentials to this backend. Files operations 
 - `WEAVE_NEXTCLOUD_FILES_APP_PASSWORD`: compatibility alias used when `WEAVE_NEXTCLOUD_FILES_ACTOR_TOKEN` is blank.
 - `WEAVE_NEXTCLOUD_FILES_WEBDAV_ROOT_PATH`: Nextcloud WebDAV files root path, defaults to `/remote.php/dav/files`.
 
-If the actor model, username, or token is missing, files endpoints fail closed with `nextcloud-adapter-not-configured`. Implemented Release 1 WebDAV operations are folder listing with quota when returned by Nextcloud, folder creation, upload, download, and delete. Move/share remain unsupported until product policy and endpoint contracts are specified.
+If the actor model, username, or token is missing, files endpoints fail closed with `nextcloud-adapter-not-configured`. Implemented WebDAV operations are folder listing with quota when returned by Nextcloud, folder creation, upload, download, and delete. Move/share remain unsupported until product policy and endpoint contracts are specified.
 
 ## Calendar facade and CalDAV adapter
 
@@ -65,9 +65,9 @@ Calendar product operations stay on `/api`; this backend is the only component t
 - `WEAVE_CALDAV_BACKEND_TOKEN`: backend actor app password/token or bearer token; required for the CalDAV adapter to call Nextcloud.
 - `WEAVE_CALDAV_REQUEST_TIMEOUT_SECONDS`: CalDAV request timeout, defaults to `10`.
 
-The Release 1 calendar facade is explicitly scoped to the Weave workspace calendar owned by the backend actor. `WEAVE_CALDAV_CALENDAR_PATH_TEMPLATE` values containing `{user}` are treated as private-user calendar targets and fail closed with `nextcloud-adapter-not-configured` until a reviewed provisioning/sharing/delegated-token model is specified. The facade responses include `scope.type = "workspace"` so clients do not present this first slice as a private per-user calendar.
+The active Calendar facade is explicitly scoped to the Weave workspace calendar owned by the backend actor. `WEAVE_CALDAV_CALENDAR_PATH_TEMPLATE` values containing `{user}` are treated as private-personal calendar targets and fail closed with `nextcloud-adapter-not-configured` until a reviewed provisioning/sharing/delegated-token model is specified. The facade responses include `scope.type = "workspace"` so clients do not present this first slice as a private per-user calendar.
 
-When required actor credentials are missing or an unsafe private-user template is configured, calendar operations fail closed with `nextcloud-adapter-not-configured`. Recurrence creation, editing, and expansion are deferred: the current DTO has no RRULE contract, and the adapter does not expose raw recurrence fields. Recurring events returned by CalDAV may appear as their source VEVENT only until a later product/API spec defines full recurrence UX.
+When required actor credentials are missing or an unsafe private-personal template is configured, calendar operations fail closed with `nextcloud-adapter-not-configured`. Recurrence creation, editing, and expansion are deferred: the current DTO has no RRULE contract, and the adapter does not expose raw recurrence fields. Recurring events returned by CalDAV may appear as their source VEVENT only until a later product/API spec defines full recurrence UX.
 
 ## Profile and onboarding variables
 
@@ -75,13 +75,13 @@ When required actor credentials are missing or an unsafe private-user template i
 - `WEAVE_ONBOARDING_MATRIX_PROVISIONING_STATE`: optional first-run Matrix provisioning override (`not_configured`, `pending`, `ready`, `degraded`, `failed`); blank derives status from chat capability.
 - `WEAVE_ONBOARDING_NEXTCLOUD_PROVISIONING_STATE`: optional first-run Nextcloud provisioning override (`not_configured`, `pending`, `ready`, `degraded`, `failed`); blank derives status from files/calendar capability and Nextcloud route configuration.
 
-Profile facade endpoints are protected by the same first-party bearer-token contract as `/api/me`. `PATCH /api/profile` accepts partial updates for `displayName`, `avatar`, `locale`, `timezone`, `accessibilityPreferences`, and `profileVisibility`. Set `WEAVE_PROFILE_STORAGE_PATH` to mounted durable storage for containerized Release 1 runs.
+Profile facade endpoints are protected by the same first-party bearer-token contract as `/api/me`. `PATCH /api/profile` accepts partial updates for `displayName`, `avatar`, `locale`, `timezone`, `accessibilityPreferences`, and `profileVisibility`. Set `WEAVE_PROFILE_STORAGE_PATH` to mounted durable storage for containerized runs.
 
 Onboarding status returns identity, roles, groups, invite status, profile completeness, and module provisioning states. Downstream states must remain frontend-safe and must not expose stack traces, tokens, secrets, or raw service errors.
 
 ## Interop gateway, Slack on-ramp, guests, and migration previews
 
-Release 1 keeps interop, guest access, and migration/import execution disabled by default. The backend exposes contract/readiness surfaces so Release 2 work can be validated without making Slack, Teams, guest portal, connector SDK, or migration runtime behavior a Release 1 dependency.
+Interop, guest access, and migration/import execution remain disabled by default. The backend exposes contract/readiness surfaces so feature-gated work can be validated without making Slack, Teams, guest portal, connector SDK, or migration runtime behavior a core dependency.
 
 - `WEAVE_INTEROP_ENABLED`: master interop gateway flag, defaults to `false`.
 - `WEAVE_INTEROP_SUPPORT_BUNDLE_REDACTION_MODE`: support bundle redaction mode label, defaults to `support-safe-redacted`.

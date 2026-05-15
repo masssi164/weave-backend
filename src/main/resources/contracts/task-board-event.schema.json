@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://weave.local/contracts/task-board-event.schema.json",
   "title": "TaskBoardEvent",
-  "description": "Preview-only normalized Boards/Tasks event envelope. Hidden for Release 1 until a promotion spec defines publication semantics.",
+  "description": "Preview-only normalized Boards/Tasks event envelope. Feature-gated until a promotion spec defines publication semantics.",
   "type": "object",
   "required": [
     "idempotencyKey",

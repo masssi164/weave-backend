@@ -2,7 +2,7 @@ package com.massimotter.weave.backend.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "One operator-facing Release 1 readiness check.")
+@Schema(description = "One operator-facing workspace readiness check.")
 public record WorkspaceReleaseReadinessCheckResponse(
         @Schema(description = "Stable check identifier.", example = "chat")
         String key,

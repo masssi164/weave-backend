@@ -50,13 +50,13 @@ public class WorkspaceController {
 
     @GetMapping({"/api/workspace/release-readiness", "/api/v1/workspace/release-readiness"})
     @Operation(
-            summary = "Get Release 1 workspace readiness",
-            description = "Returns an operator-facing snapshot of the backend-owned Release 1 dependencies and remaining setup actions.",
+            summary = "Get workspace readiness",
+            description = "Returns an operator-facing snapshot of the backend-owned core dependencies and remaining setup actions.",
             security = @SecurityRequirement(name = "bearer-jwt"))
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Workspace Release 1 readiness snapshot.",
+                    description = "Workspace workspace readiness snapshot.",
                     content = @Content(schema = @Schema(implementation = WorkspaceReleaseReadinessResponse.class))),
             @ApiResponse(responseCode = "401", description = "Missing or invalid bearer token.",
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
