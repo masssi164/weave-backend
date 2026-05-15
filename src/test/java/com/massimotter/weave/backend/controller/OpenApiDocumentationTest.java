@@ -53,6 +53,7 @@ class OpenApiDocumentationTest {
                 .andExpect(jsonPath("$.paths['/api/calendar/client-setup/credentials/{credentialId}']").exists())
                 .andExpect(jsonPath("$.paths['/api/calendar/client-setup/apple.mobileconfig']").exists())
                 .andExpect(jsonPath("$.paths['/api/calendar/events/{id}']").exists())
+                .andExpect(jsonPath("$.paths['/api/calendar/events/{id}'].get").exists())
                 .andExpect(jsonPath("$.paths['/api/workspace/capabilities']").exists())
                 .andExpect(jsonPath("$.paths['/api/workspace/release-readiness']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/workspace/capabilities']").exists())

@@ -96,17 +96,19 @@ public class CalDavCalendarAdapter implements CalendarAdapter {
     }
 
     @Override
+    public CalendarEventResponse read(CalendarPrincipal principal, String id) {
+        ensureConfigured("read-event");
+        String href = hrefFromOpaqueId(id, principal);
+        HttpResponse<String> existing = getEvent(href, "read-event");
+        return mapper.toResponse(id, existing.headers().firstValue("ETag").orElse(null), existing.body());
+    }
+
+    @Override
     public CalendarEventResponse update(CalendarPrincipal principal, String id, UpdateCalendarEventRequest request) {
         ensureConfigured("update-event");
         String href = hrefFromOpaqueId(id, principal);
         URI eventUri = eventUri(href);
-        HttpResponse<String> existing = send(requestBuilder(eventUri)
-                .GET()
-                .header("Accept", "text/calendar")
-                .build(), "update-event");
-        if (!isSuccess(existing.statusCode())) {
-            throw mapStatus(existing.statusCode(), "update-event", href);
-        }
+        HttpResponse<String> existing = getEvent(href, "update-event");
 
         IcalendarMapper.EventDraft merged = mapper.merge(mapper.parse(existing.body()), request);
         HttpRequest.Builder builder = requestBuilder(eventUri)
@@ -222,6 +224,17 @@ public class CalDavCalendarAdapter implements CalendarAdapter {
                     .encodeToString(credentials.getBytes(StandardCharsets.UTF_8)));
         }
         return builder;
+    }
+
+    private HttpResponse<String> getEvent(String href, String operation) {
+        HttpResponse<String> existing = send(requestBuilder(eventUri(href))
+                .GET()
+                .header("Accept", "text/calendar")
+                .build(), operation);
+        if (!isSuccess(existing.statusCode())) {
+            throw mapStatus(existing.statusCode(), operation, href);
+        }
+        return existing;
     }
 
     private HttpResponse<String> send(HttpRequest request, String operation) {

@@ -90,6 +90,17 @@ class FilesCalendarFacadeControllerTest {
     }
 
     @Test
+    void calendarReadFacadeExposesStableUnavailableErrorUntilNextcloudAdapterExists() throws Exception {
+        mockMvc.perform(get("/api/calendar/events/event-id")
+                        .with(workspaceJwt()))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(header().exists("X-Request-Id"))
+                .andExpect(jsonPath("$.code").value("nextcloud-adapter-not-configured"))
+                .andExpect(jsonPath("$.details.module").value("calendar"))
+                .andExpect(jsonPath("$.details.operation").value("read-event"));
+    }
+
+    @Test
     void calendarClientSetupExposesSecretFreePlatformOptionsWithoutAdapterCredentials() throws Exception {
         mockMvc.perform(get("/api/calendar/client-setup")
                         .with(workspaceJwt()))

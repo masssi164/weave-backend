@@ -62,6 +62,58 @@ class CalendarFacadeServiceTest {
     }
 
     @Test
+    void delegatesReadToAdapterWithWorkspaceScope() {
+        AtomicReference<CalendarPrincipal> capturedPrincipal = new AtomicReference<>();
+        CalendarEventResponse event = new CalendarEventResponse(
+                "event-id",
+                "Planning",
+                null,
+                OffsetDateTime.parse("2026-04-26T10:00:00+02:00"),
+                OffsetDateTime.parse("2026-04-26T11:00:00+02:00"),
+                "Europe/Berlin",
+                null,
+                false,
+                "etag");
+        CalendarAdapter adapter = new StubCalendarAdapter() {
+            @Override
+            public CalendarEventResponse read(CalendarPrincipal principal, String id) {
+                capturedPrincipal.set(principal);
+                assertThat(id).isEqualTo("event-id");
+                return event;
+            }
+        };
+        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken(jwt(), null));
+
+        var response = service(adapter).read("event-id");
+
+        assertThat(response.scope().type()).isEqualTo("workspace");
+        assertThat(response.title()).isEqualTo("Planning");
+        assertThat(capturedPrincipal.get().subject()).isEqualTo("user-123");
+        assertThat(capturedPrincipal.get().nextcloudUserId()).isEqualTo("massimo");
+    }
+
+    @Test
+    void mapsReadNotFoundToStableApiError() {
+        CalendarAdapter adapter = new StubCalendarAdapter() {
+            @Override
+            public CalendarEventResponse read(CalendarPrincipal principal, String id) {
+                throw new CalendarAdapterException(CalendarAdapterException.Type.NOT_FOUND, "missing");
+            }
+        };
+        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken(jwt(), null));
+
+        assertThatThrownBy(() -> service(adapter).read("missing-event"))
+                .isInstanceOf(ApiErrorException.class)
+                .satisfies(error -> {
+                    ApiErrorException apiError = (ApiErrorException) error;
+                    assertThat(apiError.status().value()).isEqualTo(404);
+                    assertThat(apiError.code()).isEqualTo("calendar-event-not-found");
+                    assertThat(apiError.details()).containsEntry("module", "calendar");
+                    assertThat(apiError.details()).containsEntry("operation", "read-event");
+                });
+    }
+
+    @Test
     void mapsAdapterConflictToStableApiError() {
         CalendarAdapter adapter = new StubCalendarAdapter() {
             @Override
@@ -113,6 +165,11 @@ class CalendarFacadeServiceTest {
         @Override
         public CalendarEventResponse create(CalendarPrincipal principal, CreateCalendarEventRequest request) {
             throw new AssertionError("unexpected create call");
+        }
+
+        @Override
+        public CalendarEventResponse read(CalendarPrincipal principal, String id) {
+            throw new AssertionError("unexpected read call");
         }
 
         @Override
