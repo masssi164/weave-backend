@@ -2,6 +2,7 @@ package com.massimotter.weave.backend.service;
 
 import com.massimotter.weave.backend.exception.ApiErrorException;
 import com.massimotter.weave.backend.model.calendar.CalendarEventResponse;
+import com.massimotter.weave.backend.model.calendar.CalendarScopeResponse;
 import com.massimotter.weave.backend.model.calendar.CreateCalendarEventRequest;
 import com.massimotter.weave.backend.service.calendar.CalendarAdapter;
 import com.massimotter.weave.backend.service.calendar.CalendarAdapterException;
@@ -48,6 +49,89 @@ class CalendarFacadeServiceTest {
         assertThat(response.events()).containsExactly(event);
         assertThat(capturedPrincipal.get().subject()).isEqualTo("user-123");
         assertThat(capturedPrincipal.get().nextcloudUserId()).isEqualTo("massimo");
+    }
+
+    @Test
+    void exposesWorkspaceTeamAndChannelCalendarScopes() {
+        var response = service(new StubCalendarAdapter()).scopes();
+
+        assertThat(response.scopes()).extracting(CalendarScopeResponse::type)
+                .containsExactly("workspace", "team", "channel");
+        assertThat(response.scopes().get(1).teamId()).isEqualTo("engineering");
+        assertThat(response.scopes().get(2).channelId()).isEqualTo("engineering-general");
+        assertThat(response.scopes().get(2).capabilities()).contains("read", "create", "edit", "delete");
+    }
+
+    @Test
+    void listCanReturnChannelScopedEventsWithScopedFacadeIds() {
+        OffsetDateTime startsAt = OffsetDateTime.parse("2026-04-26T10:00:00+02:00");
+        OffsetDateTime endsAt = OffsetDateTime.parse("2026-04-26T11:00:00+02:00");
+        CalendarEventResponse event = new CalendarEventResponse(
+                "raw-event-id", "Planning", null, startsAt, endsAt, "Europe/Berlin", null, false, "etag");
+        CalendarAdapter adapter = new StubCalendarAdapter() {
+            @Override
+            public List<CalendarEventResponse> list(CalendarPrincipal principal, OffsetDateTime from, OffsetDateTime to) {
+                return List.of(event);
+            }
+        };
+        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken(jwt(), null));
+
+        var response = service(adapter).list(startsAt.minusDays(1), endsAt.plusDays(1),
+                "channel", "engineering", "engineering-general");
+
+        assertThat(response.scope().type()).isEqualTo("channel");
+        assertThat(response.scope().teamId()).isEqualTo("engineering");
+        assertThat(response.scope().channelId()).isEqualTo("engineering-general");
+        CalendarEventResponse scopedEvent = response.events().get(0);
+        assertThat(scopedEvent.scope().type()).isEqualTo("channel");
+        assertThat(scopedEvent.id()).startsWith("scoped:");
+    }
+
+    @Test
+    void createReadAndDeletePreserveTeamScopeFacadeIds() {
+        AtomicReference<String> readId = new AtomicReference<>();
+        AtomicReference<String> deletedId = new AtomicReference<>();
+        OffsetDateTime startsAt = OffsetDateTime.parse("2026-04-26T10:00:00+02:00");
+        OffsetDateTime endsAt = OffsetDateTime.parse("2026-04-26T11:00:00+02:00");
+        CalendarEventResponse event = new CalendarEventResponse(
+                "raw-event-id", "Planning", null, startsAt, endsAt, "Europe/Berlin", null, false, "etag");
+        CalendarAdapter adapter = new StubCalendarAdapter() {
+            @Override
+            public CalendarEventResponse create(CalendarPrincipal principal, CreateCalendarEventRequest request) {
+                assertThat(request.scope().type()).isEqualTo("team");
+                return event;
+            }
+
+            @Override
+            public CalendarEventResponse read(CalendarPrincipal principal, String id) {
+                readId.set(id);
+                return event;
+            }
+
+            @Override
+            public void delete(CalendarPrincipal principal, String id) {
+                deletedId.set(id);
+            }
+        };
+        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken(jwt(), null));
+        CreateCalendarEventRequest request = new CreateCalendarEventRequest(
+                "Planning",
+                null,
+                startsAt,
+                endsAt,
+                "Europe/Berlin",
+                null,
+                false,
+                CalendarScopeResponse.team("engineering", "Engineering team calendar"));
+
+        var created = service(adapter).create(request);
+        var read = service(adapter).read(created.id());
+        service(adapter).delete(created.id());
+
+        assertThat(created.scope().type()).isEqualTo("team");
+        assertThat(read.scope().teamId()).isEqualTo("engineering");
+        assertThat(readId.get()).isEqualTo("raw-event-id");
+        assertThat(deletedId.get()).isEqualTo("raw-event-id");
     }
 
     @Test

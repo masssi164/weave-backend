@@ -10,6 +10,7 @@ import com.massimotter.weave.backend.model.calendar.CalendarExternalEndpointsRes
 import com.massimotter.weave.backend.model.calendar.CalendarEventResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarEventsResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarScopeResponse;
+import com.massimotter.weave.backend.model.calendar.CalendarScopesResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarSetupCredentialListResponse;
 import com.massimotter.weave.backend.model.calendar.CalendarSetupCredentialRequest;
 import com.massimotter.weave.backend.model.calendar.CalendarSetupCredentialResponse;
@@ -21,8 +22,10 @@ import com.massimotter.weave.backend.service.calendar.AppleMobileConfigProfile;
 import com.massimotter.weave.backend.service.calendar.AppleMobileConfigProfileRenderer;
 import com.massimotter.weave.backend.service.calendar.CalendarPrincipal;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Base64;
 import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -61,42 +64,64 @@ public class CalendarFacadeService {
         this.appleProfileRenderer = new AppleMobileConfigProfileRenderer(this.nextcloudBaseUrl);
     }
 
+    public CalendarScopesResponse scopes() {
+        return new CalendarScopesResponse(calendarScopes());
+    }
+
     public CalendarEventsResponse list(OffsetDateTime from, OffsetDateTime to) {
+        return list(from, to, null, null, null);
+    }
+
+    public CalendarEventsResponse list(
+            OffsetDateTime from,
+            OffsetDateTime to,
+            String scopeType,
+            String teamId,
+            String channelId) {
         validateRange(from, to);
+        CalendarScopeResponse scope = resolveScope(scopeType, teamId, channelId);
         try {
-            return new CalendarEventsResponse(adapter("list-events").list(principal(), from, to));
+            List<CalendarEventResponse> events = adapter("list-events").list(principal(), from, to).stream()
+                    .map(event -> withScope(event, scope, true))
+                    .toList();
+            return new CalendarEventsResponse(scope, events);
         } catch (CalendarAdapterException exception) {
             throw apiError(exception, "list-events");
         }
     }
 
     public CalendarEventResponse create(CreateCalendarEventRequest request) {
+        CalendarScopeResponse scope = normalizeScope(request.scope(), "create-event");
         try {
-            return adapter("create-event").create(principal(), request);
+            return withScope(adapter("create-event").create(principal(), request), scope, true);
         } catch (CalendarAdapterException exception) {
             throw apiError(exception, "create-event");
         }
     }
 
     public CalendarEventResponse read(String id) {
+        ScopedEventId eventId = scopedEventId(id);
         try {
-            return adapter("read-event").read(principal(), id);
+            return withScope(adapter("read-event").read(principal(), eventId.rawId()), eventId.scope(), true);
         } catch (CalendarAdapterException exception) {
             throw apiError(exception, "read-event");
         }
     }
 
     public CalendarEventResponse update(String id, UpdateCalendarEventRequest request) {
+        ScopedEventId eventId = scopedEventId(id);
+        CalendarScopeResponse scope = request.scope() == null ? eventId.scope() : normalizeScope(request.scope(), "update-event");
         try {
-            return adapter("update-event").update(principal(), id, request);
+            return withScope(adapter("update-event").update(principal(), eventId.rawId(), request), scope, true);
         } catch (CalendarAdapterException exception) {
             throw apiError(exception, "update-event");
         }
     }
 
     public void delete(String id) {
+        ScopedEventId eventId = scopedEventId(id);
         try {
-            adapter("delete-event").delete(principal(), id);
+            adapter("delete-event").delete(principal(), eventId.rawId());
         } catch (CalendarAdapterException exception) {
             throw apiError(exception, "delete-event");
         }
@@ -247,15 +272,153 @@ public class CalendarFacadeService {
         return revoked;
     }
 
+    private List<CalendarScopeResponse> calendarScopes() {
+        return List.of(
+                CalendarScopeResponse.workspace(),
+                CalendarScopeResponse.team("engineering", "Engineering team calendar"),
+                CalendarScopeResponse.channel("engineering", "engineering-general", "Engineering / general channel calendar"));
+    }
+
+    private CalendarScopeResponse resolveScope(String scopeType, String teamId, String channelId) {
+        if (scopeType == null || scopeType.isBlank()) {
+            return CalendarScopeResponse.workspace();
+        }
+        return normalizeScope(new CalendarScopeResponse(
+                null,
+                scopeType.trim(),
+                null,
+                "workspace",
+                blankToNull(teamId),
+                blankToNull(channelId),
+                null,
+                List.of()), "list-events");
+    }
+
+    private CalendarScopeResponse normalizeScope(CalendarScopeResponse requestedScope, String operation) {
+        if (requestedScope == null || requestedScope.type() == null || requestedScope.type().isBlank()) {
+            return CalendarScopeResponse.workspace();
+        }
+        String type = requestedScope.type().trim();
+        return switch (type) {
+            case "workspace" -> CalendarScopeResponse.workspace();
+            case "team" -> {
+                String teamId = firstNonBlank(requestedScope.teamId(), "engineering");
+                yield CalendarScopeResponse.team(teamId, firstNonBlank(requestedScope.label(), labelForTeam(teamId)));
+            }
+            case "channel" -> {
+                String channelId = firstNonBlank(requestedScope.channelId(), "engineering-general");
+                String teamId = firstNonBlank(requestedScope.teamId(), "engineering");
+                yield CalendarScopeResponse.channel(
+                        teamId,
+                        channelId,
+                        firstNonBlank(requestedScope.label(), labelForChannel(teamId, channelId)));
+            }
+            default -> throw new ApiErrorException(
+                    HttpStatus.BAD_REQUEST,
+                    "validation-error",
+                    "Request validation failed.",
+                    Map.of("module", "calendar", "operation", operation,
+                            "fields", Map.of("scope.type", "scope type must be workspace, team, or channel")));
+        };
+    }
+
+    private CalendarEventResponse withScope(CalendarEventResponse event, CalendarScopeResponse scope, boolean encodeId) {
+        String id = encodeId ? scopedEventId(scope, event.id()) : event.id();
+        return new CalendarEventResponse(
+                id,
+                event.title(),
+                event.description(),
+                event.startsAt(),
+                event.endsAt(),
+                event.timezone(),
+                event.location(),
+                event.allDay(),
+                event.etag(),
+                scope);
+    }
+
+    private String scopedEventId(CalendarScopeResponse scope, String rawId) {
+        if (scope == null || "workspace".equals(scope.type())) {
+            return rawId;
+        }
+        String scopeKey = String.join("|",
+                scope.type(),
+                scope.teamId() == null ? "" : scope.teamId(),
+                scope.channelId() == null ? "" : scope.channelId());
+        String encodedScope = Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(scopeKey.getBytes(StandardCharsets.UTF_8));
+        return "scoped:" + encodedScope + ":" + rawId;
+    }
+
+    private ScopedEventId scopedEventId(String id) {
+        if (id == null || !id.startsWith("scoped:")) {
+            return new ScopedEventId(CalendarScopeResponse.workspace(), id);
+        }
+        String[] parts = id.split(":", 3);
+        if (parts.length != 3) {
+            throw invalidScopedEventId();
+        }
+        try {
+            String decoded = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
+            String[] scopeParts = decoded.split("\\|", -1);
+            if (scopeParts.length != 3) {
+                throw invalidScopedEventId();
+            }
+            CalendarScopeResponse scope = normalizeScope(new CalendarScopeResponse(
+                    null,
+                    scopeParts[0],
+                    null,
+                    "workspace",
+                    blankToNull(scopeParts[1]),
+                    blankToNull(scopeParts[2]),
+                    null,
+                    List.of()), "read-event");
+            return new ScopedEventId(scope, parts[2]);
+        } catch (IllegalArgumentException exception) {
+            throw invalidScopedEventId();
+        }
+    }
+
+    private ApiErrorException invalidScopedEventId() {
+        return new ApiErrorException(
+                HttpStatus.BAD_REQUEST,
+                "invalid-calendar-event-id",
+                "Calendar event id is not a valid Weave calendar facade id.",
+                Map.of("module", "calendar"));
+    }
+
+    private String labelForTeam(String teamId) {
+        return capitalize(teamId) + " team calendar";
+    }
+
+    private String labelForChannel(String teamId, String channelId) {
+        return capitalize(teamId) + " / " + channelId + " channel calendar";
+    }
+
+    private String capitalize(String value) {
+        if (value == null || value.isBlank()) {
+            return "Weave";
+        }
+        String normalized = value.replace('-', ' ').trim();
+        return normalized.substring(0, 1).toUpperCase() + normalized.substring(1);
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private record ScopedEventId(CalendarScopeResponse scope, String rawId) {
+    }
+
     private CalendarAccessModelResponse accessModel() {
         return new CalendarAccessModelResponse(
-                "workspace-calendar",
-                "workspace",
+                "workspace-team-channel-calendar",
+                "workspace-team-channel",
                 false,
                 "Private per-user CalDAV calendars are not exposed until provisioning, sharing, or delegated-token access is specified and tested.",
                 "external clients use user-owned revocable per-client credentials; backend actor credentials are never issued to clients",
                 List.of(
-                        "The product calendar facade currently serves the Weave-managed workspace calendar scope.",
+                        "The product calendar facade exposes workspace, team, and channel scope metadata.",
                         "Backend CalDAV configuration that targets arbitrary private user calendars must stay fail-closed.",
                         "External clients may use CalDAV discovery URLs, but credentials must come from a user-controlled revocable flow."));
     }
